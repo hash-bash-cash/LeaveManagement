@@ -1,0 +1,74 @@
+@model IEnumerable<LMS.Models.UserViewModel>
+
+@{
+    ViewData["Title"] = "Active Users";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">@ViewData["Title"]</h2>
+        <a asp-controller="Users" asp-action="Pending" class="btn btn-primary shadow-sm hover-up">
+            <i class="fa-solid fa-user-clock me-2"></i> Pending Registrations
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm mb-4">@TempData["Success"]</div>
+    }
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4">User Details</th>
+                        <th>Role</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-init me-3">@item.FirstName.Substring(0,1)</div>
+                                    <div>
+                                        <div class="fw-bold">@item.FirstName @item.LastName</div>
+                                        <small class="text-muted">@item.Email</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge @(item.Role == "Admin" ? "bg-dark" : item.Role == "Manager" ? "bg-indigo" : "bg-primary") px-3">
+                                    @item.Role
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm">
+                                    <a asp-controller="LeaveAllocations" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="fa-solid fa-scale-balanced me-1"></i> Manage Leave
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning">
+                                        <i class="fa-solid fa-user-shield me-1"></i> Change Role
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-init {
+        width: 40px; height: 40px;
+        background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 10px; font-weight: 700; color: #1e293b;
+    }
+    .bg-indigo { background-color: #6366f1; color: white; }
+    .hover-up:hover { transform: translateY(-2px); transition: all 0.2s; }
+</style>

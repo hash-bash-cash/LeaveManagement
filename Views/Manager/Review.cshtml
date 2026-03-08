@@ -1,0 +1,120 @@
+@model LMS.Models.LeaveApprovalViewModel
+@{
+    ViewData["Title"] = "Review Leave Request";
+    Layout = "_ManagerLayout";
+    int days = (int)(Model.EndDate - Model.StartDate).TotalDays + 1;
+}
+
+<div class="row justify-content-center">
+<div class="col-lg-8">
+    <div class="content-card mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h5 class="fw-bold mb-1">Leave Request #@Model.Id</h5>
+                <span class="badge badge-pending px-3 py-2">Awaiting Review</span>
+            </div>
+            <a asp-action="PendingRequests" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Back</a>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="p-3 rounded" style="background:#f8f9fa">
+                    <p class="text-muted mb-1 small">Employee</p>
+                    <h6 class="fw-bold mb-0">@Model.EmployeeName</h6>
+                    <small class="text-muted">@Model.Email</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded" style="background:#f8f9fa">
+                    <p class="text-muted mb-1 small">Leave Type</p>
+                    <h6 class="fw-bold mb-0">@Model.LeaveTypeName</h6>
+                    <small class="text-muted">Applied: @Model.DateRequested.ToLocalTime().ToString("dd MMM yyyy HH:mm")</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded text-center" style="background:#e8f5e9">
+                    <div class="text-muted small">From</div>
+                    <div class="fw-bold">@Model.StartDate.ToString("dd MMM yyyy")</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded text-center" style="background:#e8f5e9">
+                    <div class="text-muted small">To</div>
+                    <div class="fw-bold">@Model.EndDate.ToString("dd MMM yyyy")</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded text-center" style="background:@(days > Model.AvailableBalance ? "#fff5f5" : "#e8f5e9")">
+                    <div class="text-muted small">Requested Days</div>
+                    <div class="fw-bold" style="font-size:1.4rem">@days</div>
+                </div>
+            </div>
+        </div>
+
+        @if (days > Model.AvailableBalance)
+        {
+            <div class="alert alert-warning">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <strong>Balance Warning:</strong> Employee has only <strong>@Model.AvailableBalance days</strong> available but is requesting <strong>@days days</strong>.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                Employee has <strong>@Model.AvailableBalance days</strong> available. Sufficient balance.
+            </div>
+        }
+
+        <div class="mb-4">
+            <p class="text-muted small mb-1">Reason Provided</p>
+            <div class="p-3 border rounded mb-3" style="background:#fafafa">@Model.Reason</div>
+            @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+            {
+                <p class="text-muted small mb-1">Supporting Document</p>
+                <div class="p-3 border rounded" style="background:#f8f9fa">
+                    <a href="@Model.AttachmentPath" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fa-solid fa-paperclip me-1"></i> View Attachment
+                    </a>
+                </div>
+            }
+        </div>
+
+        <hr>
+        <h6 class="fw-bold mb-3">Your Decision</h6>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3" style="border-color:#28a745 !important">
+                    <h6 class="text-success fw-bold mb-2"><i class="fa-solid fa-check-circle me-1"></i> Approve</h6>
+                    <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="Remarks (optional)"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm w-100"
+                                onclick="return confirm('Approve this leave request?')">
+                            <i class="fa-solid fa-check me-1"></i> Approve Leave
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3" style="border-color:#dc3545 !important">
+                    <h6 class="text-danger fw-bold mb-2"><i class="fa-solid fa-times-circle me-1"></i> Reject</h6>
+                    <form asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="Reason for rejection (required)" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-sm w-100"
+                                onclick="return confirm('Reject this leave request?')">
+                            <i class="fa-solid fa-times me-1"></i> Reject Leave
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

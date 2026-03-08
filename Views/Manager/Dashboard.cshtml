@@ -1,0 +1,98 @@
+@model LMS.Models.ManagerDashboardViewModel
+@{
+    ViewData["Title"] = "Manager Dashboard";
+    Layout = "_ManagerLayout";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#dc3545"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div><p>Pending Requests</p><h2>@Model.PendingRequests</h2></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fd7e14"><i class="fa-solid fa-umbrella-beach"></i></div>
+            <div><p>On Leave Today</p><h2>@Model.TeamMembersOnLeaveToday</h2></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent)"><i class="fa-solid fa-users"></i></div>
+            <div><p>Total Team Members</p><h2>@Model.TotalTeamMembers</h2></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#6f42c1"><i class="fa-solid fa-calendar-check"></i></div>
+            <div><p>Upcoming Leaves</p><h2>@Model.UpcomingLeaveCount</h2></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-hourglass-half me-2 text-warning"></i>Pending Approvals</h6>
+                <a asp-action="PendingRequests" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            @if (!Model.PendingLeaveRequests.Any())
+            {
+                <div class="text-center text-muted py-4"><i class="fa-solid fa-check-circle fa-2x text-success mb-2"></i><p class="mb-0">All caught up! No pending requests.</p></div>
+            }
+            else
+            {
+                @foreach (var r in Model.PendingLeaveRequests)
+                {
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                        <div>
+                            <div class="fw-semibold">@r.RequestingEmployee?.FirstName @r.RequestingEmployee?.LastName</div>
+                            <small class="text-muted">@r.LeaveType?.Name · @r.StartDate.ToString("dd MMM") – @r.EndDate.ToString("dd MMM yyyy")</small>
+                        </div>
+                        <a asp-action="Review" asp-route-id="@r.Id" class="btn btn-sm btn-success">Review</a>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="content-card mb-4">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-umbrella-beach me-2 text-danger"></i>On Leave Today</h6>
+            @if (!Model.TeamOnLeaveToday.Any())
+            {
+                <p class="text-muted small">No team members on leave today.</p>
+            }
+            else
+            {
+                @foreach (var emp in Model.TeamOnLeaveToday)
+                {
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div style="width:32px;height:32px;background:#dc3545;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:700">
+                            @emp.FirstName?.Substring(0,1)
+                        </div>
+                        <span class="fw-semibold small">@emp.FirstName @emp.LastName</span>
+                    </div>
+                }
+            }
+        </div>
+        <div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-calendar-check me-2 text-primary"></i>Upcoming Leaves</h6>
+            @if (!Model.UpcomingLeaves.Any())
+            {
+                <p class="text-muted small">No upcoming leaves in the next 2 weeks.</p>
+            }
+            else
+            {
+                @foreach (var u in Model.UpcomingLeaves)
+                {
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <div class="small fw-semibold">@u.RequestingEmployee?.FirstName @u.RequestingEmployee?.LastName</div>
+                        <div class="small text-muted">@u.StartDate.ToString("dd MMM")</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+﻿@using LMS.Constants
+@{
+    ViewData["Title"] = "Leave Management System";
+}
+
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <span class="section-label">Simplify Your Workplace</span>
+                <h1 class="hero-title">Streamline Your Time-Off Management</h1>
+                <p class="hero-subtitle">A professional and automated leave management system designed to empower employees and managers through transparency and efficiency.</p>
+                <div class="d-flex gap-3">
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-premium btn-primary-premium">Get Started</a>
+                    <a href="#features" class="btn btn-premium btn-outline-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="p-5">
+                    <img src="https://img.freepik.com/free-vector/office-concept-illustration_114360-1412.jpg" alt="LMS Illustration" class="img-fluid rounded-4 shadow-lg">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5" id="features">
+    <div class="text-center mb-5">
+        <span class="section-label">Modules</span>
+        <h2 class="fw-bold">Designed for Every Role</h2>
+        <p class="text-muted">Explore the specialized features built for your specific needs.</p>
+    </div>
+    <div class="row g-4">
+        <!-- Employee Card -->
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <h3>Employee Portal</h3>
+                <p>Easy-to-use interface to apply for leave, track approval status, and view holiday calendars in real-time.</p>
+            </div>
+        </div>
+        <!-- Manager Card -->
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <h3>Manager Portal</h3>
+                <p>Efficiently review and manage team leave requests with conflict alerts and team availability insights.</p>
+            </div>
+        </div>
+        <!-- Admin Card -->
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3>Admin Center</h3>
+                <p>Fully customize leave policies, manage users, and configure organization-wide settings from a central hub.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-primary text-white py-5 mt-5">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-4">Ready to automate your leave process?</h3>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-premium btn-light">Create Account</a>
+    </div>
+</div>
+

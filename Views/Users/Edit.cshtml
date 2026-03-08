@@ -1,0 +1,38 @@
+@model LMS.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "Change User Role";
+}
+
+<h1>Change Role</h1>
+<h4>@Model.FirstName @Model.LastName (@Model.Email)</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="FirstName" />
+            <input type="hidden" asp-for="LastName" />
+            <input type="hidden" asp-for="Email" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Role" class="control-label">Assign Role</label>
+                @if (ViewBag.Roles != null)
+                {
+                    <select asp-for="Role" class="form-control" asp-items="@(new SelectList(ViewBag.Roles))"></select>
+                }
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <input type="submit" value="Save Changes" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

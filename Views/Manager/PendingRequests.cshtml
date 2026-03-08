@@ -1,0 +1,49 @@
+@model IEnumerable<LMS.Models.LeaveRequest>
+@{
+    ViewData["Title"] = "Pending Requests";
+    Layout = "_ManagerLayout";
+}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">Pending Leave Requests <span class="badge" style="background:#dc3545">@Model.Count()</span></h5>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-check-double fa-3x text-success mb-3"></i>
+            <h5>All cleared!</h5><p>No pending leave requests at this time.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light"><tr><th>Employee</th><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Applied On</th><th>Reason</th><th>Action</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                int days = (int)(r.EndDate - r.StartDate).TotalDays + 1;
+                <tr>
+                    <td>
+                        <div class="fw-semibold">@r.RequestingEmployee?.FirstName @r.RequestingEmployee?.LastName</div>
+                        <small class="text-muted">@r.RequestingEmployee?.Email</small>
+                    </td>
+                    <td><span class="badge badge-pending px-2">@r.LeaveType?.Name</span></td>
+                    <td>@r.StartDate.ToString("dd MMM yyyy")</td>
+                    <td>@r.EndDate.ToString("dd MMM yyyy")</td>
+                    <td><strong>@days</strong></td>
+                    <td>@r.DateRequested.ToLocalTime().ToString("dd MMM")</td>
+                    <td><small class="text-muted" title="@r.RequestComments">@(r.RequestComments?.Length > 40 ? r.RequestComments.Substring(0,40)+"..." : r.RequestComments)</small></td>
+                    <td>
+                        <a asp-action="Review" asp-route-id="@r.Id" class="btn btn-success btn-sm">
+                            <i class="fa-solid fa-eye me-1"></i> Review
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+</div>

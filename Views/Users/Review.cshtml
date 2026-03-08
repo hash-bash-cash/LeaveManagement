@@ -1,0 +1,69 @@
+@model LMS.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "Review & Approve Registration";
+}
+
+<h1>Review Registration</h1>
+<h4>@Model.FirstName @Model.LastName</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Review">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="FirstName" />
+            <input type="hidden" asp-for="LastName" />
+            <input type="hidden" asp-for="Email" />
+            
+            <div class="card mb-4">
+                <div class="card-header bg-light">Submitted Details</div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Phone:</strong> @Model.Phone</p>
+                    <p><strong>Employee Code:</strong> @(string.IsNullOrEmpty(Model.EmployeeCode) ? "N/A" : Model.EmployeeCode)</p>
+                    <p><strong>Shift:</strong> @Model.Shift</p>
+                </div>
+            </div>
+
+            <h5>Organizational Assignment</h5>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Role" class="control-label">Assign Role *</label>
+                <select asp-for="Role" class="form-select" asp-items="@(new SelectList(ViewBag.Roles))" required></select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="DepartmentId" class="control-label">Assign Department</label>
+                <select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
+                    <option value="">-- Select Department --</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="TeamId" class="control-label">Assign Team</label>
+                <select asp-for="TeamId" class="form-select" asp-items="@(new SelectList(ViewBag.Teams, "Id", "Name"))">
+                    <option value="">-- Select Team --</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ManagerId" class="control-label">Assign Manager</label>
+                <select asp-for="ManagerId" class="form-select" asp-items="@(new SelectList(ViewBag.Managers, "Id", "Email"))">
+                    <option value="">-- Select Manager --</option>
+                </select>
+                <small class="form-text text-muted">A manager will be able to review this user's leave requests.</small>
+            </div>
+            
+            <div class="form-group mb-3">
+                <button type="submit" class="btn btn-primary">Approve & Activate Account</button>
+                <a asp-action="Pending" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

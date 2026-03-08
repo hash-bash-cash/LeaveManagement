@@ -1,0 +1,61 @@
+@model LMS.Controllers.ManageLeaveAllocationViewModel
+@{
+    ViewData["Title"] = "Manage Leave Allocations";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">@ViewData["Title"]</h2>
+        <a asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-users me-1"></i> Manage Users
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm mb-4">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm mb-4">@TempData["Error"]</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-layer-group text-primary me-2"></i>Bulk Allocate Leave</h5>
+                <p class="text-muted small">Select a leave type and specify the number of days to allocate to all active Employees and Managers for the current year (@DateTime.Now.Year).</p>
+                <form asp-action="SetAllocations" method="post" class="row g-3 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Leave Type</label>
+                        <select name="leaveTypeId" class="form-select" required>
+                            <option value="">-- Select Leave Type --</option>
+                            @foreach (var type in Model.LeaveTypes)
+                            {
+                                <option value="@type.Id">@type.Name (Default: @type.DefaultDays days)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Number of Days</label>
+                        <input type="number" name="numberOfDays" class="form-control" placeholder="e.g. 15" min="1" required />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Bulk Allocate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h4 class="fw-bold mb-4">User Leave Status</h4>
+        <div class="alert alert-info border-0 shadow-sm">
+            <i class="fa-solid fa-info-circle me-2"></i>
+            To manage or edit specific user balances, please go to the <strong>Users Management</strong> section and click "Details" on an individual user.
+        </div>
+    </div>
+</div>

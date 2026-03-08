@@ -1,0 +1,39 @@
+@model IEnumerable<LMS.Models.UserViewModel>
+
+@{
+    ViewData["Title"] = "Pending Registrations";
+}
+
+<h1>Pending Registrations</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>@Html.DisplayNameFor(model => model.Email)</th>
+            <th>@Html.DisplayNameFor(model => model.EmployeeCode)</th>
+            <th>@Html.DisplayNameFor(model => model.Phone)</th>
+            <th>@Html.DisplayNameFor(model => model.Shift)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@item.FirstName @item.LastName</td>
+            <td>@Html.DisplayFor(modelItem => item.Email)</td>
+            <td>@Html.DisplayFor(modelItem => item.EmployeeCode)</td>
+            <td>@Html.DisplayFor(modelItem => item.Phone)</td>
+            <td>@Html.DisplayFor(modelItem => item.Shift)</td>
+            <td>
+                <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-success btn-sm">Review & Approve</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-3">There are no pending registrations awaiting approval.</div>
+}

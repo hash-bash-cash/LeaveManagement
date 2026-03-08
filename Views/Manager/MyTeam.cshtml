@@ -1,0 +1,43 @@
+@model IEnumerable<LMS.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "My Team Members";
+    Layout = "_ManagerLayout";
+}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">Team Members <span class="badge" style="background:var(--accent)">@Model.Count()</span></h5>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-users-slash fa-3x mb-3"></i>
+            <h5>No Team Members</h5>
+            <p>No employees have been assigned to your team yet. Contact HR Admin.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+        @foreach (var m in Model)
+        {
+            var initials = $"{m.FirstName?.Substring(0,1)}{m.LastName?.Substring(0,1)}".ToUpper();
+            <div class="col-md-6 col-xl-4">
+                <div class="p-3 border rounded d-flex align-items-center gap-3 hover-shadow" style="transition:.2s">
+                    <div style="width:46px;height:46px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0">
+                        @initials
+                    </div>
+                    <div>
+                        <div class="fw-semibold">@m.FirstName @m.LastName</div>
+                        <div class="text-muted small">@m.Email</div>
+                        <div class="mt-1">
+                            <span class="badge badge-cancelled me-1">@m.Shift Shift</span>
+                            <span class="badge" style="background:#e8f5e9;color:#1b5e20">@(m.Department?.Name ?? "No Dept")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    }
+</div>

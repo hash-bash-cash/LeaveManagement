@@ -1,0 +1,40 @@
+@model IEnumerable<LMS.Models.LeaveRequest>
+@{
+    ViewData["Title"] = "Leave History";
+    Layout = "_ManagerLayout";
+}
+
+<div class="content-card">
+    <h5 class="fw-bold mb-4">Team Leave History</h5>
+    <div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Remarks</th><th>Status</th><th>Actioned</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            int days = (int)(r.EndDate - r.StartDate).TotalDays + 1;
+            <tr>
+                <td>
+                    <div class="fw-semibold small">@r.RequestingEmployee?.FirstName @r.RequestingEmployee?.LastName</div>
+                </td>
+                <td><small>@r.LeaveType?.Name</small></td>
+                <td><small>@r.StartDate.ToString("dd MMM yyyy")</small></td>
+                <td><small>@r.EndDate.ToString("dd MMM yyyy")</small></td>
+                <td><strong>@days</strong></td>
+                <td><small class="text-muted">@(r.ManagerRemarks ?? "—")</small></td>
+                <td>
+                    @if (r.Cancelled) { <span class="badge badge-cancelled">Cancelled</span> }
+                    else if (r.Approved == null) { <span class="badge badge-pending">Pending</span> }
+                    else if (r.Approved == true) { <span class="badge badge-approved">✅ Approved</span> }
+                    else { <span class="badge badge-rejected">❌ Rejected</span> }
+                </td>
+                <td><small class="text-muted">@(r.DateActioned.HasValue ? r.DateActioned.Value.ToLocalTime().ToString("dd MMM") : "—")</small></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+    @if (!Model.Any()) { <div class="text-center text-muted py-4"><i class="fa-solid fa-folder-open fa-2x mb-2"></i><p>No leave history found.</p></div> }
+</div>

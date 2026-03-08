@@ -1,0 +1,128 @@
+@model LMS.Models.ManagerReportsViewModel
+@{
+    ViewData["Title"] = "Team Leave Reports";
+    Layout = "_ManagerLayout";
+}
+
+<div class="row g-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="fw-bold mb-0">Team Insights & Analytics</h4>
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-print me-1"></i> Export PDF
+            </button>
+        </div>
+        <p class="text-muted">Data-driven overview of your team's leave patterns and availability.</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100 text-center">
+            <h6 class="text-muted text-uppercase fw-bold small mb-3">Total Days Approved</h6>
+            <h2 class="fw-bold text-primary mb-0">@Model.UsageByType.Sum(x => x.TotalDays)</h2>
+            <small class="text-muted">Across all leave types</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100 text-center">
+            <h6 class="text-muted text-uppercase fw-bold small mb-3">Top Leave Type</h6>
+            <h2 class="fw-bold text-indigo mb-0">@(Model.UsageByType.OrderByDescending(x => x.TotalDays).FirstOrDefault()?.TypeName ?? "N/A")</h2>
+            <small class="text-muted">Most frequently used</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100 text-center">
+            <h6 class="text-muted text-uppercase fw-bold small mb-3">Active Requests</h6>
+            <h2 class="fw-bold text-success mb-0">@Model.Trends.Sum(x => x.Count)</h2>
+            <small class="text-muted">Total processed requests</small>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold mb-4">Leave Distribution (by Type)</h5>
+            <canvas id="typeChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold mb-4">Top 5 Leave Consumers</h5>
+            <div class="mt-2">
+                @foreach (var user in Model.TopUsers)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-semibold">@user.Name</span>
+                            <span class="text-muted">@user.TotalDays days</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            @{
+                                var maxDays = Model.TopUsers.Max(u => u.TotalDays);
+                                var percent = (maxDays > 0) ? (user.TotalDays * 100 / maxDays) : 0;
+                            }
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: @percent%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-bold mb-4">Monthly Request Volume</h5>
+            <canvas id="trendChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctxType = document.getElementById('typeChart').getContext('2d');
+        new Chart(ctxType, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.UsageByType.Select(x => x.TypeName))),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.UsageByType.Select(x => x.TotalDays))),
+                    backgroundColor: ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#fd7e14', '#198754'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
+        });
+
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Trends.Select(x => x.Month))),
+                datasets: [{
+                    label: 'Number of Requests',
+                    data: @Html.Raw(Json.Serialize(Model.Trends.Select(x => x.Count))),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                scales: { 
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .text-indigo { color: #6610f2; }
+    .bg-indigo { background-color: #6610f2; }
+</style>

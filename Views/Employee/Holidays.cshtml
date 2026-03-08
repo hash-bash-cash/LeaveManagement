@@ -1,0 +1,63 @@
+@model IEnumerable<LMS.Models.Holiday>
+@{
+    ViewData["Title"] = "Holiday Calendar";
+    Layout = "_EmployeeLayout";
+    var now = DateTime.Now;
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="content-card">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-calendar-days me-2 text-primary"></i>@now.Year Public Holidays</h5>
+            @if (!Model.Any())
+            {
+                <div class="text-center text-muted py-4">
+                    <i class="fa-regular fa-calendar-xmark fa-2x mb-2"></i>
+                    <p>No holidays configured yet.</p>
+                </div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                @foreach (var h in Model)
+                {
+                    bool isPast = h.Date < DateTime.Today;
+                    bool isToday = h.Date.Date == DateTime.Today;
+                    <li class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center @(isPast ? "text-muted" : "")">
+                        <div>
+                            <div class="fw-semibold">@h.Name</div>
+                            <small class="text-muted">@h.Date.ToString("dddd, dd MMMM yyyy")</small>
+                        </div>
+                        <div class="text-end">
+                            @if (isToday)
+                            {
+                                <span class="badge" style="background:#4070f4">Today</span>
+                            }
+                            else if (isPast)
+                            {
+                                <span class="badge badge-cancelled">Past</span>
+                            }
+                            else
+                            {
+                                int daysLeft = (int)(h.Date - DateTime.Today).TotalDays;
+                                <span class="badge badge-pending">@daysLeft days</span>
+                            }
+                        </div>
+                    </li>
+                }
+                </ul>
+            }
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="content-card">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-info-circle me-2 text-primary"></i>Holiday Policy</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i>Public holidays are not counted against your leave balance</li>
+                <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i>If a public holiday falls within your approved leave, it will not be deducted</li>
+                <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i>Weekends (Saturday & Sunday) are automatically excluded</li>
+                <li class="mb-2"><i class="fa-solid fa-info-circle text-primary me-2"></i>Contact HR for any queries about the holiday schedule</li>
+            </ul>
+        </div>
+    </div>
+</div>

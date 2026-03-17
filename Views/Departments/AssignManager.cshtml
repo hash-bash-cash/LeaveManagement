@@ -1,0 +1,54 @@
+@model LMS.Models.Department
+@{
+    ViewData["Title"] = "Assign Manager";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var managers = ViewBag.Managers as List<LMS.Models.ApplicationUser> ?? new();
+}
+
+<div class="page-header">
+    <h2><i class="bi bi-person-badge me-2" style="color:#6366f1"></i>Assign Manager</h2>
+    <p>Assign a manager to <strong>@Model.Name</strong></p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-4">
+                <form asp-action="AssignManager" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Select Manager</label>
+                        @if (!managers.Any())
+                        {
+                            <div class="alert alert-warning py-2" style="font-size:0.85rem">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                No active managers found. Please create a user with the Manager role first.
+                            </div>
+                        }
+                        else
+                        {
+                            <select name="managerId" class="form-select">
+                                <option value="">— Remove Manager —</option>
+                                @foreach (var m in managers)
+                                {
+                                    <option value="@m.Id" selected="@(Model.ManagerId == m.Id)">
+                                        @m.FirstName @m.LastName (@m.Email)
+                                    </option>
+                                }
+                            </select>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn" style="background:#6366f1; color:#fff;" @(!managers.Any() ? "disabled" : "")>
+                            <i class="bi bi-check-circle me-1"></i> Assign
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

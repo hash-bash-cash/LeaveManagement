@@ -1,0 +1,124 @@
+@model LMS.Models.LeaveType
+@{
+    ViewData["Title"] = "Edit Leave Type Rules";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <h2><i class="bi bi-journal-check me-2" style="color:#6366f1"></i>Edit Leave Type Rules</h2>
+    <p>Modify the policy rules for <strong>@Model.Name</strong></p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header border-0 py-3 px-4" style="background:#f8fafc;">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-sliders me-2"></i>Leave Policy Configuration</h6>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="EditLeaveType" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="DateCreated" />
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label fw-semibold">Leave Type Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" required />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Code" class="form-label fw-semibold">Code</label>
+                            <input asp-for="Code" class="form-control" placeholder="e.g. PL" style="font-family:monospace" />
+                            <span asp-validation-for="Code" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="DefaultDays" class="form-label fw-semibold">Default Days/Year</label>
+                            <input asp-for="DefaultDays" type="number" class="form-control" min="0" />
+                            <span asp-validation-for="DefaultDays" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MaxConsecutiveDays" class="form-label fw-semibold">Max Consecutive Days</label>
+                            <input asp-for="MaxConsecutiveDays" type="number" class="form-control" min="0" />
+                            <div class="form-text">0 = no limit</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="YearlyLimit" class="form-label fw-semibold">Yearly Limit</label>
+                            <input asp-for="YearlyLimit" type="number" class="form-control" min="0" />
+                            <div class="form-text">0 = unlimited</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+                    <h6 class="fw-bold mb-3 text-muted" style="font-size:0.82rem; text-transform:uppercase; letter-spacing:0.5px;">Policy Flags</h6>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border" style="cursor:pointer" onclick="toggleCheck('IsPaid')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="IsPaid" type="checkbox" class="form-check-input" style="width:20px;height:20px" id="IsPaid" />
+                                    <div>
+                                        <div class="fw-semibold">Paid Leave</div>
+                                        <div class="text-muted" style="font-size:0.79rem">Employee gets salary during this leave</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border" style="cursor:pointer" onclick="toggleCheck('RequiresApproval')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="RequiresApproval" type="checkbox" class="form-check-input" style="width:20px;height:20px" id="RequiresApproval" />
+                                    <div>
+                                        <div class="fw-semibold">Requires Approval</div>
+                                        <div class="text-muted" style="font-size:0.79rem">Manager must approve before leave starts</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border" style="cursor:pointer" onclick="toggleCheck('CarryForward')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="CarryForward" type="checkbox" class="form-check-input" style="width:20px;height:20px" id="CarryForward" />
+                                    <div>
+                                        <div class="fw-semibold">Carry Forward</div>
+                                        <div class="text-muted" style="font-size:0.79rem">Unused days roll over to next year</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border" style="cursor:pointer" onclick="toggleCheck('IsEnabled')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="IsEnabled" type="checkbox" class="form-check-input" style="width:20px;height:20px" id="IsEnabled" />
+                                    <div>
+                                        <div class="fw-semibold">Enabled</div>
+                                        <div class="text-muted" style="font-size:0.79rem">Leave type is available for employees to apply</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn" style="background:#6366f1; color:#fff;">
+                            <i class="bi bi-check-circle me-1"></i> Save Rules
+                        </button>
+                        <a asp-action="LeaveStructure" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCheck(id) {
+            const cb = document.getElementById(id);
+            cb.checked = !cb.checked;
+        }
+    </script>
+}

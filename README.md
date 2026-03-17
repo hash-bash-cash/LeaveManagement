@@ -60,4 +60,4 @@ To access the system as an administrator:
    ```bash
    dotnet run
    ```
-5. Navigate to `http://localhost:5000` (or the port specified in your console).
+5. Navigate to `http://localhost:5032` (or the port specified in your console).

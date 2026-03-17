@@ -1,0 +1,132 @@
+@model List<LMS.Models.Holiday>
+@{
+    ViewData["Title"] = "Holiday Calendar";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-calendar-event me-2" style="color:#16a34a"></i>Holiday Calendar</h2>
+        <p>Manage company holidays visible to all employees and managers</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-upload me-1"></i> Import CSV
+        </button>
+        <a asp-controller="Admin" asp-action="AddHoliday" class="btn btn-sm" style="background:#6366f1; color:#fff;">
+            <i class="bi bi-plus-circle me-1"></i> Add Holiday
+        </a>
+    </div>
+</div>
+
+<div class="admin-table">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-calendar-x" style="font-size:3rem; opacity:0.3"></i>
+            <p class="mt-3">No holidays added yet. Click "Add Holiday" to get started.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Holiday Name</th>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Recurring Yearly</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int i = 1;}
+                    @foreach (var h in Model)
+                    {
+                        var isPast = h.Date < DateTime.Today;
+                        var isToday = h.Date.Date == DateTime.Today;
+                        <tr class="@(isPast ? "text-muted" : "")">
+                            <td>@i</td>
+                            <td class="fw-semibold">@h.Name</td>
+                            <td>@h.Date.ToString("dd MMMM yyyy")</td>
+                            <td>@h.Date.ToString("dddd")</td>
+                            <td>
+                                @if (h.IsRecurringYearly)
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-arrow-repeat me-1"></i>Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (isToday)
+                                {
+                                    <span class="badge badge-approved" style="border-radius:20px; padding:5px 10px">Today</span>
+                                }
+                                else if (isPast)
+                                {
+                                    <span class="badge badge-cancelled" style="border-radius:20px; padding:5px 10px">Past</span>
+                                }
+                                else
+                                {
+                                    var daysLeft = (h.Date - DateTime.Today).Days;
+                                    <span class="badge badge-pending" style="border-radius:20px; padding:5px 10px">In @daysLeft days</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="EditHoliday" asp-route-id="@h.Id" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="DeleteHoliday" asp-route-id="@h.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete holiday \'@h.Name\'?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 border-0 shadow">
+            <div class="modal-header border-0" style="background:#f8fafc;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-upload me-2"></i>Import Holidays from CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="ImportHolidays" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="alert alert-info py-2" style="font-size:0.83rem;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        CSV format: <code>Name,Date,IsRecurringYearly</code><br/>
+                        Example: <code>New Year,2026-01-01,true</code>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select CSV File</label>
+                        <input type="file" name="file" accept=".csv" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn" style="background:#6366f1; color:#fff;">
+                        <i class="bi bi-upload me-1"></i> Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

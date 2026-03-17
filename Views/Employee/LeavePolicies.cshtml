@@ -1,0 +1,120 @@
+@model IEnumerable<LMS.Models.LeaveType>
+@{
+    ViewData["Title"] = "Leave Policies & Rules";
+    Layout = "_EmployeeLayout";
+}
+
+<div class="content-card">
+    <div class="d-flex align-items-center mb-4">
+        <i class="fa-solid fa-book-open text-primary fs-3 me-3"></i>
+        <div>
+            <h5 class="fw-bold mb-0">Leave Policies & Guidelines</h5>
+            <span class="text-muted small">Understanding your leave entitlements and constraints</span>
+        </div>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="fa-solid fa-circle-info me-2"></i><strong>General Note:</strong> 
+        All leaves requires pre-approval from your manager unless specified otherwise (like emergencies).
+        Weekends (Saturday & Sunday) are generally observed as weekly offs and are excluded from leave duration calculations.
+    </div>
+
+    <div class="accordion" id="leavePoliciesAccordion">
+        @foreach (var type in Model)
+        {
+            var isPaidBadge = type.IsPaid ? "<span class='badge bg-success me-2'>Paid</span>" : "<span class='badge bg-secondary me-2'>Unpaid</span>";
+            var approvalBadge = type.RequiresApproval ? "<span class='badge bg-warning text-dark'>Approval Required</span>" : "<span class='badge bg-info text-dark'>Auto-Approved</span>";
+            
+            <div class="accordion-item shadow-sm mb-3 border" style="border-radius:8px; overflow:hidden;">
+                <h2 class="accordion-header" id="heading_@type.Id">
+                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@type.Id" aria-expanded="false" aria-controls="collapse_@type.Id" style="background:#f8f9fa;">
+                        @type.Name (@type.Code)
+                        <div class="ms-auto me-3">
+                            @Html.Raw(isPaidBadge)
+                            @Html.Raw(approvalBadge)
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse_@type.Id" class="accordion-collapse collapse" aria-labelledby="heading_@type.Id" data-bs-parent="#leavePoliciesAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fa-solid fa-calendar-day text-muted me-2" style="width:20px;"></i><strong>Default Allocation:</strong> @(type.DefaultDays > 0 ? $"{type.DefaultDays} days / year" : "N/A or dynamically earned")</li>
+                                    <li class="mb-2"><i class="fa-solid fa-arrow-right-to-bracket text-muted me-2" style="width:20px;"></i><strong>Carry Forward:</strong> @(type.CarryForward ? "Eligible (subject to yearly limits)" : "Lapses at year end")</li>
+                                    <li><i class="fa-solid fa-ban text-muted me-2" style="width:20px;"></i><strong>Max Consecutive:</strong> @(type.MaxConsecutiveDays > 0 ? $"{type.MaxConsecutiveDays} days" : "No technical limit")</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6 border-start ps-4">
+                                @if (type.Code == "PL")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Requires a minimum of <strong>3 business days advance notice</strong>.</li>
+                                        <li>You must consume any active <strong>Compensatory Offs (CO)</strong> before using PL.</li>
+                                        <li>Credits are allocated proportionally (1.5 days/month) post a 2-month probation period.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "ML")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Eligibility: Female employees with at least <strong>80 days of continuous service</strong>.</li>
+                                        <li>Maximum duration is 26 weeks.</li>
+                                        <li>A <strong>Medical Certificate / Supporting Document</strong> is mandatory during application.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "BL")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Up to <strong>5 days</strong> for immediate family (Spouse, Child, Parent, Parent-in-law).</li>
+                                        <li>Up to <strong>3 days</strong> for siblings (Brother, Sister).</li>
+                                        <li>You must mention the exact relationship in the Reason box when applying.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "LW")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Used when you have no other leave balances remaining.</li>
+                                        <li><span class="text-danger fw-bold">Penalty Rule:</span> Taking $\ge$ 15 LW days in a 45-day window incurs an automatic 1-day penalty from your Paid Leave allocation.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "SL")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Used for medical reasons or health emergencies.</li>
+                                        <li>If taking <strong>3 or more consecutive business days</strong>, a medical certificate/supporting document must be attached.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "CL")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Intended for short, unexpected personal needs or emergencies.</li>
+                                        <li>Subject to manager approval and standard balance limits.</li>
+                                    </ul>
+                                }
+                                else if (type.Code == "CO")
+                                {
+                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Earned by working on weekends or recognized holidays, credited by your Manager.</li>
+                                        <li><strong>Expires stringently within 1 month</strong> of the earning date.</li>
+                                        <li>Must be prioritized and used before applying for regular Paid Leave (PL).</li>
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="text-muted small mb-0 fst-italic">Standard approval paths apply.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

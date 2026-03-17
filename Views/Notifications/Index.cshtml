@@ -1,0 +1,78 @@
+@model IEnumerable<LMS.Models.Notification>
+@{
+    ViewData["Title"] = "All Notifications";
+    if (User.IsInRole("Admin")) { Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+    else if (User.IsInRole("Manager")) { Layout = "~/Views/Shared/_ManagerLayout.cshtml"; }
+    else { Layout = "~/Views/Shared/_EmployeeLayout.cshtml"; }
+
+    var unreadCount = Model.Count(n => !n.IsRead);
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h4>
+                        <p class="text-muted small mb-0">Stay updated with your latest activities and alerts</p>
+                    </div>
+                    @if (unreadCount > 0)
+                    {
+                        <form asp-action="MarkAllAsRead" method="post">
+                            <button type="submit" class="btn btn-primary btn-sm shadow-sm">
+                                <i class="bi bi-check-all me-1"></i> Mark All as Read
+                            </button>
+                        </form>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-bell-slash text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h5 class="mt-3 text-muted">No notifications yet</h5>
+                            <p class="small text-muted">We'll alert you when something important happens.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var n in Model)
+                            {
+                                <div class="list-group-item list-group-item-action @(n.IsRead ? "" : "bg-light") border-0 border-bottom p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h6 class="fw-bold mb-0 @(n.IsRead ? "text-muted" : "text-dark")">@n.Title</h6>
+                                        <small class="text-muted"><i class="bi bi-clock me-1"></i>@n.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                    </div>
+                                    <p class="mb-3 @(n.IsRead ? "text-muted" : "text-dark")" style="font-size: 0.95rem;">@n.Message</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        @if (!n.IsRead)
+                                        {
+                                            <form asp-action="MarkRead" asp-route-id="@n.Id" method="post">
+                                                <button type="submit" class="btn btn-link p-0 text-primary text-decoration-none small">
+                                                    Mark as read
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted fw-normal"><i class="bi bi-check2 me-1"></i>Read</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .list-group-item { transition: background 0.2s; }
+    .list-group-item:hover { background-color: #f8fafc !important; }
+</style>

@@ -120,12 +120,14 @@ public class EmployeeController : Controller
             return View(model);
         }
 
-        var usedDays = await _context.LeaveRequests
+        var usedRequests = await _context.LeaveRequests
             .Where(r => r.RequestingEmployeeId == user.Id
                      && r.LeaveTypeId == model.LeaveTypeId
                      && r.Approved == true
                      && !r.Cancelled)
-            .SumAsync(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
+            .ToListAsync();
+
+        var usedDays = usedRequests.Sum(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
 
         if (usedDays + businessDays > allocation.NumberOfDays)
         {
@@ -178,6 +180,22 @@ public class EmployeeController : Controller
 
         _context.LeaveRequests.Add(leaveRequest);
         await _context.SaveChangesAsync();
+
+        // Notify Manager
+        if (!string.IsNullOrEmpty(user.ManagerId))
+        {
+            var leaveType = await _context.LeaveTypes.FindAsync(model.LeaveTypeId);
+            var notification = new Notification
+            {
+                UserId = user.ManagerId,
+                Title = "New Leave Request",
+                Message = $"{user.FirstName} {user.LastName} has applied for {leaveType?.Name} starts from {model.StartDate:dd MMM yyyy}.",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+        }
 
         TempData["Success"] = "Leave application submitted successfully! Awaiting manager approval.";
         return RedirectToAction(nameof(History));

@@ -1,0 +1,58 @@
+@model LMS.Models.Department
+
+<div class="dept-card mb-3 p-3 bg-white border rounded shadow-sm" style="margin-left: @(Model.ParentDepartmentId != null ? "40px" : "0px"); border-left: 5px solid @(Model.ParentDepartmentId == null ? "#6366f1" : "#94a3b8") !important;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            @if (Model.ParentDepartmentId != null)
+            {
+                <i class="bi bi-arrow-return-right me-3 text-muted"></i>
+            }
+            <div>
+                <h6 class="fw-bold mb-0">@Model.Name</h6>
+                <small class="text-muted">
+                    @if (Model.Manager != null)
+                    {
+                        <span class="text-primary"><i class="bi bi-person-badge me-1"></i>Manager: @Model.Manager.FirstName @Model.Manager.LastName</span>
+                    }
+                    else
+                    {
+                        <span class="fst-italic">No manager assigned</span>
+                    }
+                </small>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="btn-group">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary shadow-xs"><i class="bi bi-pencil"></i></a>
+                <a asp-action="AssignManager" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary shadow-xs"><i class="bi bi-person-plus"></i></a>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Delete @Model.Name?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-danger shadow-xs"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    @if (Model.Teams.Any())
+    {
+        <div class="mt-2 ps-4">
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var team in Model.Teams)
+                {
+                    <span class="badge bg-light text-dark border shadow-xs" style="font-weight: 500;">
+                        <i class="bi bi-people me-1 text-primary"></i> @team.Name
+                        <a asp-controller="Teams" asp-action="Edit" asp-route-id="@team.Id" class="ms-2 text-muted"><i class="bi bi-gear" style="font-size: 0.75rem;"></i></a>
+                    </span>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.SubDepartments.Any())
+{
+    @foreach (var sub in Model.SubDepartments)
+    {
+        @await Html.PartialAsync("_DepartmentNode", sub)
+    }
+}

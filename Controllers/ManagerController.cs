@@ -26,20 +26,20 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
         var today = DateTime.Today;
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
 
         var pendingRequests = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled)
             .OrderByDescending(r => r.DateRequested)
             .Take(5)
             .ToListAsync();
 
         var onLeaveToday = await _context.LeaveRequests
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId)
                      && r.Approved == true && !r.Cancelled
                      && r.StartDate <= today && r.EndDate >= today)
             .Select(r => r.RequestingEmployee!)
@@ -48,7 +48,7 @@ public class ManagerController : Controller
         var upcoming = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId)
                      && r.Approved == true && !r.Cancelled
                      && r.StartDate > today)
             .OrderBy(r => r.StartDate)
@@ -59,11 +59,11 @@ public class ManagerController : Controller
         {
             ManagerName = $"{manager.FirstName} {manager.LastName}",
             PendingRequests = await _context.LeaveRequests
-                .CountAsync(r => teamIds.Contains(r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled),
+                .CountAsync(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled),
             TeamMembersOnLeaveToday = onLeaveToday.Count,
-            TotalTeamMembers = teamIds.Count,
+            TotalTeamMembers = await myTeam.CountAsync(),
             UpcomingLeaveCount = await _context.LeaveRequests
-                .CountAsync(r => teamIds.Contains(r.RequestingEmployeeId) && r.Approved == true && r.StartDate > today),
+                .CountAsync(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId) && r.Approved == true && r.StartDate > today),
             PendingLeaveRequests = pendingRequests,
             TeamOnLeaveToday = onLeaveToday,
             UpcomingLeaves = upcoming
@@ -78,12 +78,12 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
 
         var requests = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId) && r.Approved == null && !r.Cancelled)
             .OrderByDescending(r => r.DateRequested)
             .ToListAsync();
 
@@ -96,12 +96,12 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
 
         var leave = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .FirstOrDefaultAsync(r => r.Id == id && teamIds.Contains(r.RequestingEmployeeId));
+            .FirstOrDefaultAsync(r => r.Id == id && myTeam.Any(u => u.Id == r.RequestingEmployeeId));
 
         if (leave == null) return NotFound();
 
@@ -111,11 +111,13 @@ public class ManagerController : Controller
                                    && a.LeaveTypeId == leave.LeaveTypeId
                                    && a.Period == DateTime.Now.Year);
 
-        var usedDays = await _context.LeaveRequests
+        var usedRequests = await _context.LeaveRequests
             .Where(r => r.RequestingEmployeeId == leave.RequestingEmployeeId
                      && r.LeaveTypeId == leave.LeaveTypeId
                      && r.Approved == true && !r.Cancelled && r.Id != id)
-            .SumAsync(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
+            .ToListAsync();
+
+        var usedDays = usedRequests.Sum(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
 
         var model = new LeaveApprovalViewModel
         {
@@ -151,6 +153,19 @@ public class ManagerController : Controller
         leave.DateActioned = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Notify Employee
+        var notification = new Notification
+        {
+            UserId = leave.RequestingEmployeeId,
+            Title = "Leave Approved",
+            Message = $"Your leave request for {leave.StartDate:dd MMM} has been Approved.",
+            CreatedAt = DateTime.UtcNow,
+            IsRead = false
+        };
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Leave request approved successfully.";
         return RedirectToAction(nameof(PendingRequests));
     }
@@ -171,6 +186,19 @@ public class ManagerController : Controller
         leave.DateActioned = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Notify Employee
+        var notification = new Notification
+        {
+            UserId = leave.RequestingEmployeeId,
+            Title = "Leave Rejected",
+            Message = $"Your leave request for {leave.StartDate:dd MMM} has been Rejected.",
+            CreatedAt = DateTime.UtcNow,
+            IsRead = false
+        };
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Leave request rejected.";
         return RedirectToAction(nameof(PendingRequests));
     }
@@ -181,12 +209,12 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
 
         var requests = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId))
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId))
             .OrderByDescending(r => r.DateRequested)
             .ToListAsync();
 
@@ -257,7 +285,7 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
 
         // Get approved leaves for next 60 days
         var from = DateTime.Today;
@@ -266,7 +294,7 @@ public class ManagerController : Controller
         var leaves = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId)
                      && r.Approved == true && !r.Cancelled
                      && r.StartDate <= to && r.EndDate >= from)
             .OrderBy(r => r.StartDate)
@@ -347,11 +375,12 @@ public class ManagerController : Controller
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
-        var teamIds = await GetTeamMemberIds(manager.Id);
+        var myTeam = _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive);
+
         var approvedLeaves = await _context.LeaveRequests
             .Include(r => r.LeaveType)
             .Include(r => r.RequestingEmployee)
-            .Where(r => teamIds.Contains(r.RequestingEmployeeId) && r.Approved == true && !r.Cancelled)
+            .Where(r => myTeam.Any(u => u.Id == r.RequestingEmployeeId) && r.Approved == true && !r.Cancelled)
             .ToListAsync();
 
         var model = new ManagerReportsViewModel

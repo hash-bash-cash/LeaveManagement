@@ -1,0 +1,48 @@
+@model LMS.Models.Team
+@{
+    ViewData["Title"] = "New Team";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var departments = ViewBag.Departments as List<LMS.Models.Department>;
+}
+
+<div class="page-header">
+    <h2><i class="bi bi-plus-circle me-2 text-primary"></i>New Team</h2>
+    <p>Create a team and assign it to a department</p>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-bold">Team Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Backend Developers" required />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
+                        <select asp-for="DepartmentId" class="form-select" required>
+                            <option value="">-- Select Department --</option>
+                            @if (departments != null)
+                            {
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Create Team</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -238,6 +238,9 @@
             {
                 <div class="alert alert-danger py-1 px-3 mb-0 small">@TempData["Error"]</div>
             }
+            <ul class="navbar-nav me-3 mb-0" style="list-style: none;">
+                @await Component.InvokeAsync("Notifications")
+            </ul>
             <div class="d-flex align-items-center gap-2 border-end pe-3 me-2">
                 <span class="text-dark fw-bold small">@User.Identity?.Name</span>
                 <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

@@ -20,12 +20,22 @@ public class ApplyLeaveViewModel
 
     public IFormFile? Attachment { get; set; }
 
+    // Bereavement Details
+    [DataType(DataType.Date)]
+    public DateTime? DateOfDeath { get; set; }
+    public string? DeceasedName { get; set; }
+    public string? DeceasedRelationship { get; set; }
+    
+    // Flag from the LeaveType configuration
+    public bool SupportingDocumentRequired { get; set; }
+
     public List<LeaveType> LeaveTypes { get; set; } = new();
 }
 
 public class LeaveBalanceViewModel
 {
     public string LeaveTypeName { get; set; } = string.Empty;
+    public string LeaveTypeCode { get; set; } = string.Empty;
     public int Allocated { get; set; }
     public int Used { get; set; }
     public int Remaining => Allocated - Used;

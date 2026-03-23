@@ -1,0 +1,25 @@
+﻿  Determining projects to restore...
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj : warning NU1603: LMS depends on MySql.EntityFrameworkCore (>= 10.0.1-preview.1) but MySql.EntityFrameworkCore 10.0.1-preview.1 was not found. MySql.EntityFrameworkCore 10.0.1 was resolved instead.
+  All projects are up-to-date for restore.
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj : warning NU1603: LMS depends on MySql.EntityFrameworkCore (>= 10.0.1-preview.1) but MySql.EntityFrameworkCore 10.0.1-preview.1 was not found. MySql.EntityFrameworkCore 10.0.1 was resolved instead.
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Views\Shared\_Layout.cshtml(57,26): warning CS8602: Dereference of a possibly null reference. [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Services\MonthlyLeaveAllocationService.cs(76,13): warning CS0219: The variable 'updatedCount' is assigned but its value is never used [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(29,58): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(35,28): error CS0103: The name 'recentLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(36,31): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(37,32): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+
+Build FAILED.
+
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj : warning NU1603: LMS depends on MySql.EntityFrameworkCore (>= 10.0.1-preview.1) but MySql.EntityFrameworkCore 10.0.1-preview.1 was not found. MySql.EntityFrameworkCore 10.0.1 was resolved instead.
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj : warning NU1603: LMS depends on MySql.EntityFrameworkCore (>= 10.0.1-preview.1) but MySql.EntityFrameworkCore 10.0.1-preview.1 was not found. MySql.EntityFrameworkCore 10.0.1 was resolved instead.
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Views\Shared\_Layout.cshtml(57,26): warning CS8602: Dereference of a possibly null reference. [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Services\MonthlyLeaveAllocationService.cs(76,13): warning CS0219: The variable 'updatedCount' is assigned but its value is never used [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(29,58): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(35,28): error CS0103: The name 'recentLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(36,31): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\Controllers\EmployeeController.cs(37,32): error CS0103: The name 'allLeaves' does not exist in the current context [C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\LMS.csproj]
+    4 Warning(s)
+    4 Error(s)
+
+Time Elapsed 00:00:02.95

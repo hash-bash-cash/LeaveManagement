@@ -118,6 +118,10 @@ namespace LMS.Areas.Identity.Pages.Account
             [Required]
             [Display(Name = "Shift")]
             public string Shift { get; set; }
+
+            [Required]
+            [Display(Name = "Gender")]
+            public string Gender { get; set; }
         }
 
 
@@ -140,6 +144,7 @@ namespace LMS.Areas.Identity.Pages.Account
                 user.EmployeeCode = Input.EmployeeCode ?? string.Empty;
                 user.Phone = Input.Phone;
                 user.Shift = Input.Shift;
+                user.Gender = Input.Gender;
                 user.DateJoined = DateTime.UtcNow;
                 user.IsActive = false;
                 user.Status = UserStatus.Pending;

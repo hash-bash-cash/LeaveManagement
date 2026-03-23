@@ -6,6 +6,7 @@ public class ApplicationUser : IdentityUser
 {
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public string Gender { get; set; } = string.Empty;
     public DateTime DateJoined { get; set; }
 
     // Registration Details
@@ -17,8 +18,6 @@ public class ApplicationUser : IdentityUser
     public int? DepartmentId { get; set; }
     public Department? Department { get; set; }
 
-    public int? TeamId { get; set; }
-    public Team? Team { get; set; }
 
     public string? ManagerId { get; set; }
     public ApplicationUser? Manager { get; set; }

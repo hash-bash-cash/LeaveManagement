@@ -5,9 +5,43 @@
 }
 
 <div class="content-card">
-    <h5 class="fw-bold mb-4">Team Leave History</h5>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">Team Leave History</h5>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="row g-3 mb-4 p-3 bg-light rounded-3 border mx-0 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted">Search Employee/Remarks</label>
+            <input type="text" id="teamSearch" class="form-control form-control-sm" placeholder="Search name or message...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted">Filter by Type</label>
+            <select id="teamTypeFilter" class="form-select form-select-sm">
+                <option value="">All Leave Types</option>
+                @foreach(var t in Model.Select(m => m.LeaveType?.Name).Distinct())
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted">Filter by Status</label>
+            <select id="teamStatusFilter" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button id="resetTeamFilters" class="btn btn-outline-secondary btn-sm w-100">Reset</button>
+        </div>
+    </div>
+
     <div class="table-responsive">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover align-middle" id="teamHistoryTable">
         <thead class="table-light">
             <tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Remarks</th><th>Status</th><th>Actioned</th></tr>
         </thead>
@@ -38,3 +72,48 @@
     </div>
     @if (!Model.Any()) { <div class="text-center text-muted py-4"><i class="fa-solid fa-folder-open fa-2x mb-2"></i><p>No leave history found.</p></div> }
 </div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('teamSearch');
+        const typeFilter = document.getElementById('teamTypeFilter');
+        const statusFilter = document.getElementById('teamStatusFilter');
+        const resetButton = document.getElementById('resetTeamFilters');
+        const tableRows = document.querySelectorAll('#teamHistoryTable tbody tr');
+
+        function filterTeamTable() {
+            const searchText = searchInput.value.toLowerCase().trim();
+            const selectedType = typeFilter.value;
+            const selectedStatus = statusFilter.value.toLowerCase();
+
+            tableRows.forEach(row => {
+                const nameText = row.children[0].textContent.toLowerCase();
+                const typeText = row.children[1].textContent.trim();
+                const remarkText = row.children[5].textContent.toLowerCase();
+                const statusText = row.children[6].textContent.toLowerCase();
+
+                const matchesSearch = !searchText || nameText.includes(searchText) || remarkText.includes(searchText);
+                const matchesType = !selectedType || typeText === selectedType;
+                const matchesStatus = !selectedStatus || statusText.includes(selectedStatus);
+
+                if (matchesSearch && matchesType && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', filterTeamTable);
+        typeFilter.addEventListener('change', filterTeamTable);
+        statusFilter.addEventListener('change', filterTeamTable);
+        resetButton.addEventListener('click', () => {
+            searchInput.value = '';
+            typeFilter.value = '';
+            statusFilter.value = '';
+            filterTeamTable();
+        });
+    });
+</script>
+}

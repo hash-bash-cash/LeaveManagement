@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<LMS.Models.ApplicationUser> UserManager
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +10,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        :root { --sidebar-bg:#0f2027; --sidebar-hover:#1e3a4a; --sidebar-active:#0d9e6e; --sidebar-width:265px; --accent:#0d9e6e; }
+        :root { --sidebar-bg:#0f2027; --sidebar-hover:#1e3a4a; --sidebar-active:#0d9e6e; --sidebar-width:270px; --accent:#0d9e6e; --personal-accent:#6366f1; }
         body { background:#f0f4f8; font-family:'Segoe UI',sans-serif; }
         .lms-sidebar { width:var(--sidebar-width); min-height:100vh; background:var(--sidebar-bg); position:fixed; top:0; left:0; display:flex; flex-direction:column; z-index:1000; box-shadow:4px 0 20px rgba(0,0,0,.25); }
         .sidebar-brand { padding:22px 20px; border-bottom:1px solid rgba(255,255,255,.08); }
@@ -20,12 +22,28 @@
         .user-info span { color:#fff; font-size:13px; font-weight:600; }
         .sidebar-nav { padding:10px 0; flex:1; overflow-y:auto; }
         .nav-section-title { padding:14px 20px 4px; color:rgba(255,255,255,.3); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; }
-        .sidebar-nav .nav-link { padding:10px 20px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:12px; transition:all .2s; font-size:13.5px; position:relative; }
+        .sidebar-nav .nav-link { padding:10px 20px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:12px; transition:all .2s; font-size:13.5px; position:relative; text-decoration:none; }
         .sidebar-nav .nav-link i { width:18px; text-align:center; font-size:14px; }
         .sidebar-nav .nav-link:hover { background:var(--sidebar-hover); color:#fff; }
         .sidebar-nav .nav-link.active { background:var(--accent); color:#fff; }
         .sidebar-nav .nav-link.active::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:rgba(255,255,255,.8); }
         .badge-pill-pending { background:#fff3cd; color:#856404; border-radius:20px; padding:3px 10px; font-size:12px; }
+
+        /* Personal section with distinct visual */
+        .sidebar-divider { margin:8px 20px; border-top:1px solid rgba(255,255,255,.1); }
+        .personal-section { background:rgba(99,102,241,.08); margin:6px 10px; border-radius:10px; padding:4px 0; border:1px solid rgba(99,102,241,.15); }
+        .personal-section .nav-section-title { color:rgba(99,102,241,.7); }
+        .personal-section .nav-link.active { background:var(--personal-accent); }
+        .personal-section .nav-link:hover { background:rgba(99,102,241,.15); }
+
+        /* Mode indicator */
+        .mode-indicator { display:flex; margin:10px 14px 4px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,.1); }
+        .mode-btn { flex:1; padding:8px 10px; font-size:11px; font-weight:700; text-align:center; cursor:pointer; transition:all .25s; text-decoration:none; letter-spacing:.5px; }
+        .mode-btn.team-mode { background:var(--accent); color:#fff; }
+        .mode-btn.personal-mode { background:var(--personal-accent); color:#fff; }
+        .mode-btn.inactive { background:transparent; color:rgba(255,255,255,.4); }
+        .mode-btn.inactive:hover { color:rgba(255,255,255,.7); background:rgba(255,255,255,.05); }
+
         .main-content { margin-left:var(--sidebar-width); min-height:100vh; }
         .topbar { background:#fff; padding:14px 28px; border-bottom:1px solid #e4eaf0; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.04); }
         .topbar-title { font-weight:700; color:#0f2027; font-size:17px; }
@@ -41,9 +59,19 @@
         .form-control:focus,.form-select:focus { border-color:var(--accent); box-shadow:0 0 0 .25rem rgba(13,158,110,.15); }
         .btn-success { background:var(--accent); border:none; } .btn-success:hover { background:#0b8a5e; }
         .conflict-alert { background:#fff5f5; border:1px solid #f8d7da; border-radius:8px; padding:10px 14px; margin-bottom:6px; }
+        .balance-card { background: linear-gradient(135deg, #6366f1, #818cf8); border-radius: 12px; padding: 22px; color: white; }
+        .balance-card h2 { font-weight: 700; font-size: 2.2rem; margin: 0; }
+        .btn-primary { background: var(--personal-accent); border: none; } .btn-primary:hover { background: #4f46e5; }
     </style>
 </head>
 <body>
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isPersonalMode = currentController == "Employee";
+    var isTeamMode = !isPersonalMode;
+}
+
 <div class="lms-sidebar">
     <div class="sidebar-brand">
         <h4><i class="fa-solid fa-user-tie me-2"></i> Manager Portal</h4>
@@ -53,41 +81,86 @@
         <div class="user-avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "M")</div>
         <div class="user-info"><small>Manager</small><span>@User.Identity?.Name</span></div>
     </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-indicator">
+        <a class="mode-btn @(isTeamMode ? "team-mode" : "inactive")" asp-controller="Manager" asp-action="Dashboard">
+            <i class="fa-solid fa-users-gear me-1"></i> TEAM
+        </a>
+        <a class="mode-btn @(isPersonalMode ? "personal-mode" : "inactive")" asp-controller="Employee" asp-action="Dashboard">
+            <i class="fa-solid fa-user me-1"></i> MY LEAVES
+        </a>
+    </div>
+
     <nav class="sidebar-nav">
-        <div class="nav-section-title">Overview</div>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Manager" asp-action="Dashboard">
-            <i class="fa-solid fa-gauge-high"></i> Dashboard
-        </a>
+        @if (isTeamMode)
+        {
+            <!-- ═══ TEAM MANAGEMENT MODE ═══ -->
+            <div class="nav-section-title">Overview</div>
+            <a class="nav-link @(currentAction == "Dashboard" && currentController == "Manager" ? "active" : "")" asp-controller="Manager" asp-action="Dashboard">
+                <i class="fa-solid fa-gauge-high"></i> Team Dashboard
+            </a>
 
-        <div class="nav-section-title">Leave Management</div>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "PendingRequests" ? "active" : "")" asp-controller="Manager" asp-action="PendingRequests">
-            <i class="fa-solid fa-hourglass-half"></i> Pending Requests
-        </a>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "History" ? "active" : "")" asp-controller="Manager" asp-action="History">
-            <i class="fa-solid fa-clock-rotate-left"></i> Leave History
-        </a>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "TeamCalendar" ? "active" : "")" asp-controller="Manager" asp-action="TeamCalendar">
-            <i class="fa-solid fa-calendar-check"></i> Team Leave Calendar
-        </a>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Manager" asp-action="Reports">
-            <i class="fa-solid fa-chart-line"></i> Team Reports
-        </a>
+            <div class="nav-section-title">Leave Approvals</div>
+            <a class="nav-link @(currentAction == "PendingRequests" ? "active" : "")" asp-controller="Manager" asp-action="PendingRequests">
+                <i class="fa-solid fa-hourglass-half"></i> Pending Requests
+            </a>
+            <a class="nav-link @(currentAction == "History" && currentController == "Manager" ? "active" : "")" asp-controller="Manager" asp-action="History">
+                <i class="fa-solid fa-clock-rotate-left"></i> Team Leave History
+            </a>
+            <a class="nav-link @(currentAction == "TeamCalendar" ? "active" : "")" asp-controller="Manager" asp-action="TeamCalendar">
+                <i class="fa-solid fa-calendar-check"></i> Team Leave Calendar
+            </a>
+            <a class="nav-link @(currentAction == "Reports" ? "active" : "")" asp-controller="Manager" asp-action="Reports">
+                <i class="fa-solid fa-chart-line"></i> Team Reports
+            </a>
 
-        <div class="nav-section-title">Team Management</div>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyTeam" ? "active" : "")" asp-controller="Manager" asp-action="MyTeam">
-            <i class="fa-solid fa-users"></i> My Team Members
-        </a>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "TeamBalance" ? "active" : "")" asp-controller="Manager" asp-action="TeamBalance">
-            <i class="fa-solid fa-scale-balanced"></i> Team Leave Balance
-        </a>
+            <div class="nav-section-title">Team</div>
+            <a class="nav-link @(currentAction == "MyTeam" ? "active" : "")" asp-controller="Manager" asp-action="MyTeam">
+                <i class="fa-solid fa-users"></i> Team Portal
+            </a>
+            <a class="nav-link @(currentAction == "CreditCO" ? "active" : "")" asp-controller="Manager" asp-action="CreditCO">
+                <i class="fa-solid fa-award"></i> Credit CO
+            </a>
 
-        <div class="nav-section-title">My Leave</div>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "ApplyLeave" ? "active" : "")" asp-controller="Manager" asp-action="ApplyLeave">
-            <i class="fa-solid fa-paper-plane"></i> Apply for Leave
-        </a>
+            <div class="nav-section-title">Resources</div>
+            <a class="nav-link @(currentAction == "LeavePolicies" ? "active" : "")" asp-controller="Employee" asp-action="LeavePolicies">
+                <i class="fa-solid fa-book-open"></i> Leave Policies
+            </a>
+        }
+        else
+        {
+            <!-- ═══ PERSONAL LEAVES MODE ═══ -->
+            <div class="personal-section">
+                <div class="nav-section-title">My Overview</div>
+                <a class="nav-link @(currentAction == "Dashboard" && currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Dashboard">
+                    <i class="fa-solid fa-gauge-high"></i> My Leave Dashboard
+                </a>
 
+                <div class="nav-section-title">Leave Actions</div>
+                <a class="nav-link @(currentAction == "Apply" ? "active" : "")" asp-controller="Employee" asp-action="Apply">
+                    <i class="fa-solid fa-paper-plane"></i> Apply for Leave
+                </a>
+                <a class="nav-link @(currentAction == "History" && currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="History">
+                    <i class="fa-solid fa-clock-rotate-left"></i> My Leave History
+                </a>
+                <a class="nav-link @(currentAction == "Balance" ? "active" : "")" asp-controller="Employee" asp-action="Balance">
+                    <i class="fa-solid fa-wallet"></i> My Leave Balance
+                </a>
+
+                <div class="nav-section-title">Info</div>
+                <a class="nav-link @(currentAction == "Holidays" ? "active" : "")" asp-controller="Employee" asp-action="Holidays">
+                    <i class="fa-solid fa-calendar-days"></i> Holiday Calendar
+                </a>
+                <a class="nav-link @(currentAction == "LeavePolicies" ? "active" : "")" asp-controller="Employee" asp-action="LeavePolicies">
+                    <i class="fa-solid fa-book-open"></i> Leave Policies
+                </a>
+            </div>
+        }
+
+        <div class="sidebar-divider"></div>
         <div class="nav-section-title">Account</div>
-        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")" asp-controller="Manager" asp-action="Profile">
+        <a class="nav-link @(currentAction == "Profile" && currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Profile">
             <i class="fa-solid fa-user-circle"></i> My Profile
         </a>
         <a class="nav-link" asp-area="Identity" asp-page="/Account/Logout" onclick="document.forms['mlogout'].submit(); return false;">
@@ -99,7 +172,21 @@
 
 <div class="main-content">
     <div class="topbar">
-        <span class="topbar-title">@ViewData["Title"]</span>
+        <div class="d-flex align-items-center gap-3">
+            @if (isPersonalMode)
+            {
+                <span class="badge rounded-pill" style="background:var(--personal-accent); color:#fff; font-size:11px; padding:5px 12px;">
+                    <i class="fa-solid fa-user me-1"></i> Personal Mode
+                </span>
+            }
+            else
+            {
+                <span class="badge rounded-pill" style="background:var(--accent); color:#fff; font-size:11px; padding:5px 12px;">
+                    <i class="fa-solid fa-users-gear me-1"></i> Team Mode
+                </span>
+            }
+            <span class="topbar-title">@ViewData["Title"]</span>
+        </div>
         <div class="d-flex align-items-center gap-3">
             @if (TempData["Success"] != null) { <div class="alert alert-success py-1 px-3 mb-0 small">@TempData["Success"]</div> }
             @if (TempData["Error"] != null) { <div class="alert alert-danger py-1 px-3 mb-0 small">@TempData["Error"]</div> }

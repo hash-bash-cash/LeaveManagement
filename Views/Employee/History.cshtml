@@ -1,15 +1,46 @@
 @model IEnumerable<LMS.Models.LeaveRequest>
 @{
     ViewData["Title"] = "Leave History";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
 }
 
 <div class="content-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0">All Leave Requests</h5>
-        <a asp-action="Apply" class="btn btn-primary btn-sm">
+        <a asp-action="Apply" class="btn btn-primary btn-sm shadow-sm">
             <i class="fa-solid fa-plus me-1"></i> New Request
         </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="row g-3 mb-4 p-3 bg-light rounded-3 border mx-0 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted">Search Remarks</label>
+            <input type="text" id="searchFilter" class="form-control form-control-sm" placeholder="Search by reason...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted">Filter by Type</label>
+            <select id="typeFilter" class="form-select form-select-sm">
+                <option value="">All Leave Types</option>
+                @foreach(var t in Model.Select(m => m.LeaveType?.Name).Distinct())
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted">Filter by Status</label>
+            <select id="statusFilter" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button id="resetFilters" class="btn btn-outline-secondary btn-sm w-100">Reset</button>
+        </div>
     </div>
 
     @if (!Model.Any())
@@ -95,3 +126,52 @@
         </div>
     }
 </div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const resetButton = document.getElementById('resetFilters');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        function filterTable() {
+            const searchText = searchInput.value.toLowerCase().trim();
+            const selectedType = typeFilter.value;
+            const selectedStatus = statusFilter.value.toLowerCase();
+
+            tableRows.forEach(row => {
+                const typeText = row.children[1].textContent.trim();
+                const remarkText = row.children[6].textContent.trim().toLowerCase();
+                const statusText = row.children[8].textContent.trim().toLowerCase();
+
+                const matchesSearch = !searchText || 
+                                     remarkText.includes(searchText) || 
+                                     typeText.toLowerCase().includes(searchText);
+                
+                const matchesType = !selectedType || typeText === selectedType;
+                
+                // For status, we check if the cell contains the status word (ignoring emojis)
+                const matchesStatus = !selectedStatus || statusText.includes(selectedStatus);
+
+                if (matchesSearch && matchesType && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        typeFilter.addEventListener('change', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        resetButton.addEventListener('click', () => {
+            searchInput.value = '';
+            typeFilter.value = '';
+            statusFilter.value = '';
+            filterTable();
+        });
+    });
+</script>
+}

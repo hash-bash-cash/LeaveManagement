@@ -103,9 +103,6 @@ namespace LMS.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -125,8 +122,6 @@ namespace LMS.Data.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
-
-                    b.HasIndex("TeamId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -163,7 +158,7 @@ namespace LMS.Data.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("CompensatoryOffs", (string)null);
+                    b.ToTable("CompensatoryOffs");
                 });
 
             modelBuilder.Entity("LMS.Models.Department", b =>
@@ -173,7 +168,6 @@ namespace LMS.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ManagerId")
@@ -192,7 +186,7 @@ namespace LMS.Data.Migrations
 
                     b.HasIndex("ParentDepartmentId");
 
-                    b.ToTable("Departments", (string)null);
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("LMS.Models.Holiday", b =>
@@ -204,6 +198,9 @@ namespace LMS.Data.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool>("IsFloating")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsRecurringYearly")
                         .HasColumnType("tinyint(1)");
 
@@ -213,7 +210,7 @@ namespace LMS.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Holidays", (string)null);
+                    b.ToTable("Holidays");
                 });
 
             modelBuilder.Entity("LMS.Models.LeaveAllocation", b =>
@@ -247,7 +244,7 @@ namespace LMS.Data.Migrations
 
                     b.HasIndex("LeaveTypeId");
 
-                    b.ToTable("LeaveAllocations", (string)null);
+                    b.ToTable("LeaveAllocations");
                 });
 
             modelBuilder.Entity("LMS.Models.LeaveRequest", b =>
@@ -314,7 +311,7 @@ namespace LMS.Data.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.ToTable("LeaveRequests", (string)null);
+                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("LMS.Models.LeaveType", b =>
@@ -360,7 +357,7 @@ namespace LMS.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LeaveTypes", (string)null);
+                    b.ToTable("LeaveTypes");
                 });
 
             modelBuilder.Entity("LMS.Models.Notification", b =>
@@ -391,27 +388,7 @@ namespace LMS.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
-                });
-
-            modelBuilder.Entity("LMS.Models.Team", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -557,15 +534,9 @@ namespace LMS.Data.Migrations
                         .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("LMS.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId");
-
                     b.Navigation("Department");
 
                     b.Navigation("Manager");
-
-                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("LMS.Models.CompensatoryOff", b =>
@@ -657,17 +628,6 @@ namespace LMS.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LMS.Models.Team", b =>
-                {
-                    b.HasOne("LMS.Models.Department", "Department")
-                        .WithMany("Teams")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -722,8 +682,6 @@ namespace LMS.Data.Migrations
             modelBuilder.Entity("LMS.Models.Department", b =>
                 {
                     b.Navigation("SubDepartments");
-
-                    b.Navigation("Teams");
                 });
 #pragma warning restore 612, 618
         }

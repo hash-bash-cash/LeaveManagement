@@ -1,185 +1,314 @@
 @model LMS.Models.AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Executive Overview";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="page-header">
-    <h2><i class="bi bi-speedometer2 me-2" style="color:#6366f1"></i>Admin Dashboard</h2>
-    <p>System overview and analytics for @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
-</div>
-
-<!-- STAT CARDS ROW 1 -->
-<div class="row g-3 mb-4">
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#ede9fe">
-                <i class="bi bi-people-fill" style="color:#6366f1"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.TotalEmployees</div>
-                <div class="stat-label">Total Employees</div>
-            </div>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-grid-1x2-fill me-2 text-primary"></i>Executive Overview</h2>
+        <p class="text-muted mb-0">Analytics and organizational health for @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
     </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#dbeafe">
-                <i class="bi bi-person-badge-fill" style="color:#2563eb"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.TotalManagers</div>
-                <div class="stat-label">Total Managers</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#fef3c7">
-                <i class="bi bi-hourglass-split" style="color:#d97706"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.PendingApprovals</div>
-                <div class="stat-label">Pending Approvals</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#d1fae5">
-                <i class="bi bi-check-circle-fill" style="color:#059669"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.ActiveLeaveRequests</div>
-                <div class="stat-label">Active Leave Requests</div>
-            </div>
-        </div>
+    <div class="d-none d-md-block">
+        <button class="btn btn-white shadow-sm border border-secondary border-opacity-10 rounded-3 px-3 py-2 fw-semibold small">
+            <i class="bi bi-download me-2"></i>Export Report
+        </button>
     </div>
 </div>
 
-<!-- STAT CARDS ROW 2 -->
-<div class="row g-3 mb-4">
+<!-- TOP STATS: PRIMARY INDICATORS -->
+<div class="row g-4 mb-4">
     <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#fce7f3">
-                <i class="bi bi-diagram-3-fill" style="color:#db2777"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.TotalDepartments</div>
-                <div class="stat-label">Departments</div>
+        <div class="premium-card bg-gradient-indigo">
+            <div class="premium-card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="premium-label">Active Force</div>
+                        <div class="premium-value">@Model.TotalEmployees</div>
+                    </div>
+                    <div class="premium-icon-box">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="premium-footer">
+                    <span class="text-white-50 small"><i class="bi bi-arrow-up-right me-1"></i>Organizational Size</span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#e0f2fe">
-                <i class="bi bi-grid-3x3-gap-fill" style="color:#0284c7"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.TotalTeams</div>
-                <div class="stat-label">Teams</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#fee2e2">
-                <i class="bi bi-person-x-fill" style="color:#dc2626"></i>
-            </div>
-            <div>
-                <div class="stat-value">@Model.EmployeesOnLeaveToday</div>
-                <div class="stat-label">On Leave Today</div>
+        <div class="premium-card bg-gradient-blue">
+            <div class="premium-card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="premium-label">Leadership</div>
+                        <div class="premium-value">@Model.TotalManagers</div>
+                    </div>
+                    <div class="premium-icon-box">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                </div>
+                <div class="premium-footer">
+                    <span class="text-white-50 small"><i class="bi bi-shield-check me-1"></i>Active Managers</span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#f0fdf4">
-                <i class="bi bi-calendar-event-fill" style="color:#16a34a"></i>
+        <div class="premium-card bg-gradient-amber">
+            <div class="premium-card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="premium-label">Pending Action</div>
+                        <div class="premium-value">@Model.PendingApprovals</div>
+                    </div>
+                    <div class="premium-icon-box">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+                <div class="premium-footer">
+                    <span class="text-white-50 small"><i class="bi bi-lightning-charge me-1"></i>Awaiting Decision</span>
+                </div>
             </div>
-            <div>
-                <div class="stat-value">@Model.UpcomingHolidays</div>
-                <div class="stat-label">Upcoming Holidays</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="premium-card bg-gradient-emerald">
+            <div class="premium-card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="premium-label">Operational</div>
+                        <div class="premium-value">@Model.ActiveLeaveRequests</div>
+                    </div>
+                    <div class="premium-icon-box">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+                <div class="premium-footer">
+                    <span class="text-white-50 small"><i class="bi bi-calendar-check me-1"></i>Approved Requests</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- BOTTOM ROW -->
+<!-- SECONDARY INDICATORS -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stat-mini-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="mini-icon bg-pink-light"><i class="bi bi-diagram-3-fill text-pink"></i></div>
+                <div>
+                    <div class="mini-label">Departments</div>
+                    <div class="mini-value text-pink">@Model.TotalDepartments</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="mini-icon bg-cyan-light"><i class="bi bi-grid-3x3-gap-fill text-cyan"></i></div>
+                <div>
+                    <div class="mini-label">Sub-Units</div>
+                    <div class="mini-value text-cyan">@Model.TotalSubDepartments</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card @(Model.EmployeesOnLeaveToday > 0 ? "border-danger-subtle bg-danger-subtle bg-opacity-10" : "")">
+            <div class="d-flex align-items-center gap-3">
+                <div class="mini-icon bg-red-light"><i class="bi bi-person-x-fill text-red"></i></div>
+                <div>
+                    <div class="mini-label">Absent Today</div>
+                    <div class="mini-value text-red">@Model.EmployeesOnLeaveToday</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="mini-icon bg-green-light"><i class="bi bi-calendar-event-fill text-green"></i></div>
+                <div>
+                    <div class="mini-label">Holidays Soon</div>
+                    <div class="mini-value text-green">@Model.UpcomingHolidays</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED SECTIONS -->
 <div class="row g-4">
-    <!-- Employees On Leave Today -->
     <div class="col-lg-7">
-        <div class="admin-table">
-            <div style="padding: 18px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-person-x me-2 text-danger"></i>Employees On Leave Today</h6>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold d-flex align-items-center">
+                    <span class="rounded-pill bg-danger bg-opacity-10 p-1 me-2"><i class="bi bi-person-x-fill text-danger mx-1"></i></span>
+                    Absence Tracker
+                </h6>
+                <span class="badge rounded-pill bg-light text-dark border fw-normal">Live Stats</span>
             </div>
-            @if (Model.EmployeesOnLeaveTodayList.Any())
-            {
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            <th>Leave Type</th>
-                            <th>End Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var leave in Model.EmployeesOnLeaveTodayList)
-                        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light bg-opacity-50 border-top-0">
                             <tr>
-                                <td>
-                                    <div class="fw-semibold">@leave.RequestingEmployee?.FirstName @leave.RequestingEmployee?.LastName</div>
-                                    <div class="text-muted" style="font-size:0.78rem">@leave.RequestingEmployee?.Email</div>
-                                </td>
-                                <td><span class="badge bg-primary bg-opacity-10 text-primary">@leave.LeaveType?.Name</span></td>
-                                <td>@leave.EndDate.ToString("dd MMM yyyy")</td>
+                                <th class="ps-4 py-3 small text-uppercase text-muted fw-bold border-0">Personnel</th>
+                                <th class="py-3 small text-uppercase text-muted fw-bold border-0">Category</th>
+                                <th class="py-3 small text-uppercase text-muted fw-bold border-0">Release Date</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-check-circle" style="font-size:2.5rem; opacity:0.3"></i>
-                    <p class="mt-2 mb-0">No employees are on leave today</p>
+                        </thead>
+                        <tbody>
+                            @if (Model.EmployeesOnLeaveTodayList.Any())
+                            {
+                                @foreach (var leave in Model.EmployeesOnLeaveTodayList)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-sm">@leave.RequestingEmployee?.FirstName?[0]@leave.RequestingEmployee?.LastName?[0]</div>
+                                                <div>
+                                                    <div class="fw-bold text-dark mb-0">@leave.RequestingEmployee?.FirstName @leave.RequestingEmployee?.LastName</div>
+                                                    <div class="text-muted small">@leave.RequestingEmployee?.Email</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge rounded shadow-sm py-2 px-3 bg-primary bg-opacity-10 text-primary">@leave.LeaveType?.Name</span></td>
+                                        <td>
+                                            <div class="d-flex align-items-center text-dark fw-medium">
+                                                <i class="bi bi-calendar-date me-2 text-muted"></i>
+                                                @leave.EndDate.ToString("dd MMM yyyy")
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="py-3">
+                                            <i class="bi bi-emoji-smile text-muted opacity-50 display-4"></i>
+                                            <p class="text-muted mt-3 mb-0">Operational Efficiency 100%. No absences today.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            }
+            </div>
         </div>
     </div>
 
-    <!-- Upcoming Holidays -->
     <div class="col-lg-5">
-        <div class="admin-table">
-            <div style="padding: 18px 20px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-calendar2-event me-2 text-success"></i>Upcoming Holidays</h6>
-                <a asp-controller="Admin" asp-action="HolidayCalendar" class="btn btn-sm btn-outline-primary" style="font-size:0.78rem">View All</a>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold d-flex align-items-center">
+                    <span class="rounded-pill bg-success bg-opacity-10 p-1 me-2"><i class="bi bi-calendar2-check-fill text-success mx-1"></i></span>
+                    Upcoming Recess
+                </h6>
+                <a asp-action="HolidayCalendar" class="small text-decoration-none fw-bold">View Full Calendar</a>
             </div>
-            @if (Model.UpcomingHolidayList.Any())
-            {
-                <div style="padding: 8px 0;">
-                    @foreach (var h in Model.UpcomingHolidayList)
-                    {
-                        var daysLeft = (h.Date - DateTime.Today).Days;
-                        <div style="padding: 12px 20px; border-bottom: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div class="fw-semibold" style="font-size:0.9rem">@h.Name</div>
-                                <div class="text-muted" style="font-size:0.78rem">@h.Date.ToString("dd MMM yyyy")</div>
+            <div class="card-body p-0">
+                @if (Model.UpcomingHolidayList.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var h in Model.UpcomingHolidayList)
+                        {
+                            var daysLeft = (h.Date - DateTime.Today).Days;
+                            <div class="list-group-item px-4 py-3 border-0 border-bottom-faint">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="calendar-item-date">
+                                            <div class="month">@h.Date.ToString("MMM")</div>
+                                            <div class="day">@h.Date.ToString("dd")</div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@h.Name</div>
+                                            <div class="small text-muted">National Gazetted Holiday</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge rounded-pill @(daysLeft <= 3 ? "bg-warning text-dark" : "bg-light text-muted border") px-3">
+                                            @(daysLeft == 0 ? "Today" : daysLeft == 1 ? "Tomorrow" : $"In {daysLeft} days")
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="badge" style="background:#f0fdf4; color:#16a34a; font-size:0.75rem">
-                                @(daysLeft == 0 ? "Today" : daysLeft == 1 ? "Tomorrow" : $"In {daysLeft} days")
-                            </span>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-x" style="font-size:2rem; opacity:0.3"></i>
-                    <p class="mt-2 mb-0">No upcoming holidays</p>
-                </div>
-            }
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar2-x text-muted opacity-50 display-4"></i>
+                        <p class="text-muted mt-3">No holidays in the next 30 days.</p>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Premium UI Components */
+    .premium-card {
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        color: white;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-card:hover { 
+        transform: translateY(-8px); 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    }
+    .premium-card::before {
+        content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .bg-gradient-indigo { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+    .bg-gradient-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .bg-gradient-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .bg-gradient-emerald { background: linear-gradient(135deg, #10b981, #059669); }
+
+    .premium-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85; margin-bottom: 0.5rem; }
+    .premium-value { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+    .premium-icon-box { background: rgba(255,255,255,0.2); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .premium-footer { margin-top: 1.5rem; }
+
+    /* Mini stats */
+    .stat-mini-card { background: white; border-radius: 1rem; padding: 1.25rem; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.2s; }
+    .stat-mini-card:hover { transform: scale(1.02); background: #fdfdfd; }
+    .mini-icon { width: 44px; height: 44px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .mini-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+    .mini-value { font-size: 1.25rem; font-weight: 800; line-height: 1.2; }
+
+    .bg-pink-light { background: #fdf2f8; } .text-pink { color: #db2777; }
+    .bg-cyan-light { background: #ecfeff; } .text-cyan { color: #0891b2; }
+    .bg-red-light { background: #fef2f2; } .text-red { color: #dc2626; }
+    .bg-green-light { background: #f0fdf4; } .text-green { color: #16a34a; }
+
+    /* Custom UI */
+    .avatar-sm { width: 40px; height: 40px; background: #6366f1; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+    .border-bottom-faint { border-bottom: 0.5px solid #f1f5f9; }
+
+    .calendar-item-date { 
+        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; 
+        text-align: center; width: 46px; height: 46px; overflow: hidden;
+    }
+    .calendar-item-date .month { background: #6366f1; color: white; font-size: 0.55rem; font-weight: 800; text-transform: uppercase; padding: 2px 0; }
+    .calendar-item-date .day { font-size: 1.1rem; font-weight: 800; color: #1e293b; padding-top: 1px; }
+
+    .btn-white { background: white; color: #1e293b; transition: all 0.2s; }
+    .btn-white:hover { background: #f8fafc; color: #6366f1; border-color: #6366f1 !important; transform: translateY(-1px); }
+</style>

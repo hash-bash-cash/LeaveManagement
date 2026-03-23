@@ -105,19 +105,42 @@ public class ManagerController : Controller
 
         if (leave == null) return NotFound();
 
-        // Calculate balance
-        var allocation = await _context.LeaveAllocations
-            .FirstOrDefaultAsync(a => a.EmployeeId == leave.RequestingEmployeeId
-                                   && a.LeaveTypeId == leave.LeaveTypeId
-                                   && a.Period == DateTime.Now.Year);
-
-        var usedRequests = await _context.LeaveRequests
-            .Where(r => r.RequestingEmployeeId == leave.RequestingEmployeeId
-                     && r.LeaveTypeId == leave.LeaveTypeId
-                     && r.Approved == true && !r.Cancelled && r.Id != id)
+        // Calculate balance correctly
+        var leaveTypes = await _context.LeaveTypes.ToListAsync();
+        var allLeaves = await _context.LeaveRequests
+            .Where(r => r.RequestingEmployeeId == leave.RequestingEmployeeId && r.Approved == true && !r.Cancelled && r.Id != id)
+            .ToListAsync();
+        var allocations = await _context.LeaveAllocations
+            .Where(a => a.EmployeeId == leave.RequestingEmployeeId && a.Period == DateTime.Now.Year)
+            .ToListAsync();
+        var cos = await _context.CompensatoryOffs
+            .Where(c => c.EmployeeId == leave.RequestingEmployeeId && !c.IsUsed)
             .ToListAsync();
 
-        var usedDays = usedRequests.Sum(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
+        int available = 0;
+        if (leave.LeaveType != null)
+        {
+            if (leave.LeaveType.Code == "CO") available = cos.Count;
+            else if (leave.LeaveType.Code == "LW" || leave.LeaveType.Code == "ML" || leave.LeaveType.Code == "BL") available = 0; // Info only
+            else
+            {
+                var alloc = allocations.FirstOrDefault(a => a.LeaveTypeId == leave.LeaveTypeId);
+                if (alloc != null)
+                {
+                    var usedLeaves = allLeaves.Where(l => l.LeaveTypeId == leave.LeaveTypeId).ToList();
+                    int usedDays = 0;
+                    foreach(var l in usedLeaves)
+                    {
+                        var days = 0;
+                        for (var d = l.StartDate; d <= l.EndDate; d = d.AddDays(1))
+                            if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday) days++;
+                        days -= _context.Holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate);
+                        usedDays += days;
+                    }
+                    available = alloc.NumberOfDays - usedDays;
+                }
+            }
+        }
 
         var model = new LeaveApprovalViewModel
         {
@@ -130,8 +153,11 @@ public class ManagerController : Controller
             TotalDays = (int)(leave.EndDate - leave.StartDate).TotalDays + 1,
             Reason = leave.RequestComments,
             DateRequested = leave.DateRequested,
-            AvailableBalance = (allocation?.NumberOfDays ?? 0) - usedDays,
-            AttachmentPath = leave.AttachmentPath
+            AvailableBalance = available,
+            AttachmentPath = leave.AttachmentPath,
+            DateOfDeath = leave.DateOfDeath,
+            DeceasedName = leave.DeceasedName,
+            DeceasedRelationship = leave.DeceasedRelationship
         };
 
         return View(model);
@@ -151,6 +177,54 @@ public class ManagerController : Controller
         leave.ReviewerId = manager.Id;
         leave.ManagerRemarks = remarks;
         leave.DateActioned = DateTime.UtcNow;
+
+        var leaveType = await _context.LeaveTypes.FindAsync(leave.LeaveTypeId);
+        if (leaveType != null)
+        {
+            if (leaveType.Code == "LW")
+            {
+                var fortyFiveDaysAgo = DateTime.Today.AddDays(-45);
+                var recentLwps = await _context.LeaveRequests
+                    .Where(r => r.RequestingEmployeeId == leave.RequestingEmployeeId && r.Approved == true && !r.Cancelled && r.LeaveTypeId == leave.LeaveTypeId && r.StartDate >= fortyFiveDaysAgo)
+                    .ToListAsync();
+                
+                int totalLwpDays = 0;
+                foreach(var l in recentLwps) 
+                {
+                    for (var d = l.StartDate; d <= l.EndDate; d = d.AddDays(1)) if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday) totalLwpDays++;
+                }
+                
+                int currentLwpDays = 0;
+                for (var d = leave.StartDate; d <= leave.EndDate; d = d.AddDays(1)) if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday) currentLwpDays++;
+
+                if (totalLwpDays + currentLwpDays >= 15 && totalLwpDays < 15)
+                {
+                    var plType = await _context.LeaveTypes.FirstOrDefaultAsync(l => l.Code == "PL");
+                    if (plType != null)
+                    {
+                        var plAlloc = await _context.LeaveAllocations.FirstOrDefaultAsync(a => a.EmployeeId == leave.RequestingEmployeeId && a.LeaveTypeId == plType.Id && a.Period == DateTime.Now.Year);
+                        if (plAlloc != null && plAlloc.NumberOfDays > 0)
+                        {
+                            plAlloc.NumberOfDays -= 1;
+                            _context.LeaveAllocations.Update(plAlloc);
+                        }
+                    }
+                }
+            }
+            else if (leaveType.Code == "CO")
+            {
+                int businessDays = 0;
+                for (var d = leave.StartDate; d <= leave.EndDate; d = d.AddDays(1)) if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday) businessDays++;
+                businessDays -= await _context.Holidays.CountAsync(h => h.Date >= leave.StartDate && h.Date <= leave.EndDate);
+                
+                var unusedCOs = await _context.CompensatoryOffs.Where(c => c.EmployeeId == leave.RequestingEmployeeId && !c.IsUsed && c.ExpiryDate >= leave.EndDate).OrderBy(c => c.ExpiryDate).Take(businessDays).ToListAsync();
+                foreach(var co in unusedCOs)
+                {
+                    co.IsUsed = true;
+                    _context.CompensatoryOffs.Update(co);
+                }
+            }
+        }
 
         await _context.SaveChangesAsync();
 
@@ -221,19 +295,89 @@ public class ManagerController : Controller
         return View(requests);
     }
 
-    // ─── MY TEAM ────────────────────────────────────────────────────────────
+    // ─── MY TEAM (CONSULTED HUB: BALANCES + HISTORY) ──────────────────────────
     public async Task<IActionResult> MyTeam()
     {
         var manager = await _userManager.GetUserAsync(User);
         if (manager == null) return Challenge();
 
         var teamMembers = await _userManager.Users
-            .Include(u => u.Department)
-            .Include(u => u.Team)
             .Where(u => u.ManagerId == manager.Id && u.IsActive)
+            .Include(u => u.Department)
+            .OrderBy(u => u.FirstName)
             .ToListAsync();
 
-        return View(teamMembers);
+        var result = new List<TeamMemberBalanceViewModel>();
+
+        foreach (var member in teamMembers)
+        {
+            var allocations = await _context.LeaveAllocations
+                .Include(a => a.LeaveType)
+                .Where(a => a.EmployeeId == member.Id && a.Period == DateTime.Now.Year)
+                .ToListAsync();
+
+            var history = await _context.LeaveRequests
+                .Include(h => h.LeaveType)
+                .Where(r => r.RequestingEmployeeId == member.Id)
+                .OrderByDescending(r => r.DateRequested)
+                .ToListAsync();
+
+            var balances = allocations.Select(a => new LeaveBalanceViewModel
+            {
+                LeaveTypeName = a.LeaveType!.Name,
+                Allocated = a.NumberOfDays,
+                Used = history.Where(l => l.LeaveTypeId == a.LeaveTypeId && l.Approved == true && !l.Cancelled).Sum(l => (int)(l.EndDate - l.StartDate).TotalDays + 1)
+            }).ToList();
+
+            result.Add(new TeamMemberBalanceViewModel
+            {
+                EmployeeId = member.Id,
+                EmployeeName = $"{member.FirstName} {member.LastName}",
+                Email = member.Email ?? "",
+                Shift = member.Shift,
+                Balances = balances,
+                History = history
+            });
+        }
+
+        return View(result);
+    }
+
+    // ─── CREDIT CO ──────────────────────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> CreditCO()
+    {
+        var manager = await _userManager.GetUserAsync(User);
+        if (manager == null) return Challenge();
+        
+        var myTeam = await _context.Users.Where(u => u.ManagerId == manager.Id && u.IsActive).ToListAsync();
+        ViewBag.TeamMembers = myTeam;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreditCO(string employeeId, DateTime dateWorked, string reason)
+    {
+        var manager = await _userManager.GetUserAsync(User);
+        if (manager == null) return Challenge();
+
+        var employee = await _context.Users.FirstOrDefaultAsync(u => u.Id == employeeId && u.ManagerId == manager.Id);
+        if(employee != null)
+        {
+            var co = new CompensatoryOff {
+                EmployeeId = employeeId,
+                DateEarned = dateWorked,
+                ExpiryDate = dateWorked.AddMonths(1),
+                IsUsed = false,
+                Reason = reason,
+                ApprovedById = manager.Id
+            };
+            _context.CompensatoryOffs.Add(co);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Compensatory Off credited successfully.";
+        }
+        return RedirectToAction(nameof(MyTeam));
     }
 
     // ─── TEAM LEAVE BALANCE ─────────────────────────────────────────────────
@@ -313,60 +457,9 @@ public class ManagerController : Controller
 
     // ─── APPLY LEAVE FOR SELF ───────────────────────────────────────────────
     [HttpGet]
-    public async Task<IActionResult> ApplyLeave()
+    public IActionResult ApplyLeave()
     {
-        var leaveTypes = await _context.LeaveTypes.ToListAsync();
-        var model = new ApplyLeaveViewModel { LeaveTypes = leaveTypes };
-        return View(model);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApplyLeave(ApplyLeaveViewModel model)
-    {
-        var manager = await _userManager.GetUserAsync(User);
-        if (manager == null) return Challenge();
-
-        model.LeaveTypes = await _context.LeaveTypes.ToListAsync();
-
-        if (model.StartDate > model.EndDate)
-        {
-            ModelState.AddModelError("", "Start date cannot be after end date.");
-            return View(model);
-        }
-        if (model.StartDate < DateTime.Today)
-        {
-            ModelState.AddModelError("", "Leave cannot be applied for past dates.");
-            return View(model);
-        }
-
-        var overlap = await _context.LeaveRequests
-            .AnyAsync(r => r.RequestingEmployeeId == manager.Id && !r.Cancelled
-                        && r.Approved != false
-                        && r.StartDate <= model.EndDate && r.EndDate >= model.StartDate);
-        if (overlap)
-        {
-            ModelState.AddModelError("", "You already have a leave request overlapping with these dates.");
-            return View(model);
-        }
-
-        var leaveRequest = new LeaveRequest
-        {
-            RequestingEmployeeId = manager.Id,
-            LeaveTypeId = model.LeaveTypeId,
-            StartDate = model.StartDate,
-            EndDate = model.EndDate,
-            DateRequested = DateTime.UtcNow,
-            RequestComments = model.Reason,
-            Approved = null, // Goes to Admin for approval
-            Cancelled = false
-        };
-
-        _context.LeaveRequests.Add(leaveRequest);
-        await _context.SaveChangesAsync();
-
-        TempData["Success"] = "Your leave request has been submitted for Admin approval.";
-        return RedirectToAction(nameof(Dashboard));
+        return RedirectToAction("Apply", "Employee");
     }
 
     // ─── REPORTS ────────────────────────────────────────────────────────────
@@ -409,13 +502,10 @@ public class ManagerController : Controller
 
 
     // ─── PROFILE ────────────────────────────────────────────────────────────
-    public async Task<IActionResult> Profile()
+    [HttpGet]
+    public IActionResult Profile()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null) return Challenge();
-        await _context.Entry(user).Reference(u => u.Department).LoadAsync();
-        await _context.Entry(user).Reference(u => u.Team).LoadAsync();
-        return View(user);
+        return RedirectToAction("Profile", "Employee");
     }
 
     // ─── HELPER ─────────────────────────────────────────────────────────────

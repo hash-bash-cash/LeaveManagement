@@ -1,7 +1,7 @@
 @model IEnumerable<LMS.Models.LeaveType>
 @{
     ViewData["Title"] = "Leave Policies & Rules";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
 }
 
 <div class="content-card">
@@ -19,98 +19,93 @@
         Weekends (Saturday & Sunday) are generally observed as weekly offs and are excluded from leave duration calculations.
     </div>
 
-    <div class="accordion" id="leavePoliciesAccordion">
+    <div class="row g-4">
         @foreach (var type in Model)
         {
-            var isPaidBadge = type.IsPaid ? "<span class='badge bg-success me-2'>Paid</span>" : "<span class='badge bg-secondary me-2'>Unpaid</span>";
-            var approvalBadge = type.RequiresApproval ? "<span class='badge bg-warning text-dark'>Approval Required</span>" : "<span class='badge bg-info text-dark'>Auto-Approved</span>";
-            
-            <div class="accordion-item shadow-sm mb-3 border" style="border-radius:8px; overflow:hidden;">
-                <h2 class="accordion-header" id="heading_@type.Id">
-                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@type.Id" aria-expanded="false" aria-controls="collapse_@type.Id" style="background:#f8f9fa;">
-                        @type.Name (@type.Code)
-                        <div class="ms-auto me-3">
-                            @Html.Raw(isPaidBadge)
-                            @Html.Raw(approvalBadge)
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm border-0" style="border-radius: 12px; transition: transform 0.2s;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">@type.Name</h6>
+                            <span class="badge bg-light text-primary border me-1">@type.Code</span>
                         </div>
-                    </button>
-                </h2>
-                <div id="collapse_@type.Id" class="accordion-collapse collapse" aria-labelledby="heading_@type.Id" data-bs-parent="#leavePoliciesAccordion">
-                    <div class="accordion-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <ul class="list-unstyled mb-0">
-                                    <li class="mb-2"><i class="fa-solid fa-calendar-day text-muted me-2" style="width:20px;"></i><strong>Default Allocation:</strong> @(type.DefaultDays > 0 ? $"{type.DefaultDays} days / year" : "N/A or dynamically earned")</li>
-                                    <li class="mb-2"><i class="fa-solid fa-arrow-right-to-bracket text-muted me-2" style="width:20px;"></i><strong>Carry Forward:</strong> @(type.CarryForward ? "Eligible (subject to yearly limits)" : "Lapses at year end")</li>
-                                    <li><i class="fa-solid fa-ban text-muted me-2" style="width:20px;"></i><strong>Max Consecutive:</strong> @(type.MaxConsecutiveDays > 0 ? $"{type.MaxConsecutiveDays} days" : "No technical limit")</li>
+                        <div class="text-end">
+                            @if(type.IsPaid) { <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">Paid</span> }
+                            else { <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mb-1">Unpaid</span> }
+                            <br>
+                            @if(type.RequiresApproval) { <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small px-2 py-1">Manager Approval</span> }
+                            else { <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle small px-2 py-1">Auto-Approved</span> }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="small mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-calendar-check me-2 opacity-50"></i>Allocation</span>
+                                <span class="fw-semibold">@(type.DefaultDays > 0 ? $"{type.DefaultDays} days / year" : "N/A")</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-sync me-2 opacity-50"></i>Carry Forward</span>
+                                <span class="fw-semibold @(type.CarryForward ? "text-success" : "text-danger")">@(type.CarryForward ? "Yes" : "No")</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="fa-solid fa-layer-group me-2 opacity-50"></i>Max Consecutive</span>
+                                <span class="fw-semibold">@(type.MaxConsecutiveDays > 0 ? $"{type.MaxConsecutiveDays} days" : "Unlimited")</span>
+                            </div>
+                        </div>
+
+                        <div class="p-2 rounded bg-light border-start border-4 border-primary">
+                            <p class="mb-1 fw-bold small text-primary">Guidelines & Rules:</p>
+                            @if (type.Code == "PL")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>Min 15 days advance notice.</li>
+                                    <li>Credits earned (1.75/mo) after probation.</li>
+                                    <li>Priority over other paid leaves.</li>
                                 </ul>
-                            </div>
-                            <div class="col-md-6 border-start ps-4">
-                                @if (type.Code == "PL")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Requires a minimum of <strong>3 business days advance notice</strong>.</li>
-                                        <li>You must consume any active <strong>Compensatory Offs (CO)</strong> before using PL.</li>
-                                        <li>Credits are allocated proportionally (1.5 days/month) post a 2-month probation period.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "ML")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Eligibility: Female employees with at least <strong>80 days of continuous service</strong>.</li>
-                                        <li>Maximum duration is 26 weeks.</li>
-                                        <li>A <strong>Medical Certificate / Supporting Document</strong> is mandatory during application.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "BL")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Up to <strong>5 days</strong> for immediate family (Spouse, Child, Parent, Parent-in-law).</li>
-                                        <li>Up to <strong>3 days</strong> for siblings (Brother, Sister).</li>
-                                        <li>You must mention the exact relationship in the Reason box when applying.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "LW")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Used when you have no other leave balances remaining.</li>
-                                        <li><span class="text-danger fw-bold">Penalty Rule:</span> Taking $\ge$ 15 LW days in a 45-day window incurs an automatic 1-day penalty from your Paid Leave allocation.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "SL")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Used for medical reasons or health emergencies.</li>
-                                        <li>If taking <strong>3 or more consecutive business days</strong>, a medical certificate/supporting document must be attached.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "CL")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Intended for short, unexpected personal needs or emergencies.</li>
-                                        <li>Subject to manager approval and standard balance limits.</li>
-                                    </ul>
-                                }
-                                else if (type.Code == "CO")
-                                {
-                                    <p class="mb-1 fw-bold text-primary"><i class="fa-solid fa-triangle-exclamation me-1"></i> Specific Constraints:</p>
-                                    <ul class="small text-muted mb-0">
-                                        <li>Earned by working on weekends or recognized holidays, credited by your Manager.</li>
-                                        <li><strong>Expires stringently within 1 month</strong> of the earning date.</li>
-                                        <li>Must be prioritized and used before applying for regular Paid Leave (PL).</li>
-                                    </ul>
-                                }
-                                else
-                                {
-                                    <p class="text-muted small mb-0 fst-italic">Standard approval paths apply.</p>
-                                }
-                            </div>
+                            }
+                            else if (type.Code == "ML")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>Min 80 days service. (Female only)</li>
+                                    <li>26 weeks consecutive.</li>
+                                    <li>Medical Cert mandatory.</li>
+                                </ul>
+                            }
+                            else if (type.Code == "BL")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>Max 5 days for immediate family.</li>
+                                    <li>Relationship verification required.</li>
+                                </ul>
+                            }
+                            else if (type.Code == "SL")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>For medical emergencies.</li>
+                                    <li>3+ days require Doctor's note.</li>
+                                </ul>
+                            }
+                            else if (type.Code == "CL")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>Unexpected personal needs.</li>
+                                    <li>Subject to balance & approval.</li>
+                                </ul>
+                            }
+                            else if (type.Code == "CO")
+                            {
+                                <ul class="small mb-0 ps-3">
+                                    <li>Expires within 1 month.</li>
+                                    <li>Credited by manager only.</li>
+                                </ul>
+                            }
+                            else
+                            {
+                                <ul class="small mb-0 ps-3 text-muted">
+                                    <li>Standard leave policies apply.</li>
+                                    <li>Please consult HR handbook.</li>
+                                </ul>
+                            }
                         </div>
                     </div>
                 </div>

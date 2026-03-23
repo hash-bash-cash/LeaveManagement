@@ -20,6 +20,17 @@ public class AdminController : Controller
         _userManager = userManager;
     }
 
+    // ─── PROFILE ────────────────────────────────────────────────────────────
+    public async Task<IActionResult> Profile()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return NotFound();
+        
+        await _context.Entry(user).Reference(u => u.Department).LoadAsync();
+        
+        return View(user);
+    }
+
     // ─── DASHBOARD ──────────────────────────────────────────────────────────
     public async Task<IActionResult> Dashboard()
     {
@@ -46,8 +57,8 @@ public class AdminController : Controller
             TotalManagers         = managers.Count,
             ActiveLeaveRequests   = await _context.LeaveRequests.CountAsync(r => !r.Cancelled && r.Approved == true),
             PendingApprovals      = await _context.LeaveRequests.CountAsync(r => r.Approved == null && !r.Cancelled),
-            TotalDepartments      = await _context.Departments.CountAsync(),
-            TotalTeams            = await _context.Teams.CountAsync(),
+            TotalDepartments      = await _context.Departments.CountAsync(d => d.ParentDepartmentId == null),
+            TotalSubDepartments   = await _context.Departments.CountAsync(d => d.ParentDepartmentId != null),
             EmployeesOnLeaveToday = onLeaveToday.Count,
             UpcomingHolidays      = upcomingHolidays.Count,
             EmployeesOnLeaveTodayList = onLeaveToday,
@@ -83,6 +94,78 @@ public class AdminController : Controller
     {
         var leaves = await GetMappedLeaves("Rejected");
         return View(leaves);
+    }
+
+    // ─── LEAVE HISTORY (CONSOLIDATED) ───────────────────────────────────────
+    public async Task<IActionResult> LeaveHistory()
+    {
+        var today = DateTime.Today;
+
+        // Today's Leaves
+        var todayLeaves = await GetMappedLeaves("Today");
+        
+        // Pending Leaves
+        var pendingLeaves = await GetMappedLeaves("Pending");
+
+        // Department-wise Stats
+        var departments = await _context.Departments
+            .Include(d => d.SubDepartments)
+            .ToListAsync();
+
+        var deptStats = await _context.Departments
+            .Select(dept => new DepartmentLeaveStatsViewModel
+            {
+                DepartmentName = dept.Name,
+                TotalEmployees = _context.Users.Count(u => u.DepartmentId == dept.Id),
+                OnLeaveToday = _context.LeaveRequests.Count(r => 
+                    r.RequestingEmployee!.DepartmentId == dept.Id 
+                    && r.Approved == true && !r.Cancelled 
+                    && r.StartDate <= today && r.EndDate >= today),
+                PendingApprovals = _context.LeaveRequests.Count(r => 
+                    r.RequestingEmployee!.DepartmentId == dept.Id 
+                    && r.Approved == null && !r.Cancelled)
+            })
+            .OrderBy(d => d.DepartmentName)
+            .ToListAsync();
+
+        // Employee Stats
+        var allUsers = await _userManager.Users.ToListAsync();
+        var empStats = new List<EmployeeLeaveStatsViewModel>();
+        foreach (var user in allUsers)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "No Role";
+
+            var totalLeaves = await _context.LeaveRequests
+                .Where(r => r.RequestingEmployeeId == user.Id && r.Approved == true && !r.Cancelled)
+                .CountAsync();
+
+            var pending = await _context.LeaveRequests
+                .Where(r => r.RequestingEmployeeId == user.Id && r.Approved == null && !r.Cancelled)
+                .CountAsync();
+
+            empStats.Add(new EmployeeLeaveStatsViewModel
+            {
+                EmployeeName = $"{user.FirstName} {user.LastName}",
+                Role = role,
+                TotalLeavesTaken = totalLeaves,
+                PendingRequests = pending
+            });
+        }
+
+        var model = new AdminLeaveHistoryViewModel
+        {
+            OnLeaveTodayCount = todayLeaves.Count,
+            PendingApprovalsCount = pendingLeaves.Count,
+            TotalEmployees = allUsers.Count,
+            TotalAbsent = todayLeaves.Count,
+            TodayLeaves = todayLeaves,
+            PendingLeaves = pendingLeaves,
+            DepartmentStats = deptStats,
+            EmployeeStats = empStats
+        };
+
+        return View(model);
     }
 
     // ─── EMPLOYEE LEAVE HISTORY ─────────────────────────────────────────────
@@ -260,6 +343,7 @@ public class AdminController : Controller
             "Pending"  => query.Where(r => r.Approved == null && !r.Cancelled),
             "Approved" => query.Where(r => r.Approved == true && !r.Cancelled),
             "Rejected" => query.Where(r => r.Approved == false && !r.Cancelled),
+            "Today"    => query.Where(r => r.Approved == true && !r.Cancelled && r.StartDate <= DateTime.Today && r.EndDate >= DateTime.Today),
             _          => query
         };
 

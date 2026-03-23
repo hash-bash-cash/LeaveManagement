@@ -15,6 +15,12 @@ public class LeaveRequest
     public bool? Approved { get; set; }
     public bool Cancelled { get; set; }
 
+    // Bereavement Details
+    public DateTime? DateOfDeath { get; set; }
+    public string? DeceasedName { get; set; }
+    public string? DeceasedRelationship { get; set; }
+    public bool SupportingDocumentRequired { get; set; }
+
     public string RequestingEmployeeId { get; set; } = string.Empty;
     public ApplicationUser? RequestingEmployee { get; set; }
 

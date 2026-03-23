@@ -1,0 +1,216 @@
+@model LMS.Models.AdminLeaveHistoryViewModel
+@{
+    ViewData["Title"] = "Leave History & Stats";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="bi bi-clock-history me-2" style="color:#6366f1"></i>Leave History & Statistics</h2>
+            <p>Comprehensive overview of company-wide attendance and leave status</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary px-3 py-2">Total Employees: @Model.TotalEmployees</span>
+        </div>
+    </div>
+</div>
+
+<!-- TOP STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fee2e2">
+                <i class="bi bi-person-x-fill" style="color:#dc2626"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.OnLeaveTodayCount</div>
+                <div class="stat-label">On Leave Today</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7">
+                <i class="bi bi-hourglass-split" style="color:#d97706"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.PendingApprovalsCount</div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left: 4px solid #6366f1">
+            <div class="stat-icon" style="background:#ede9fe">
+                <i class="bi bi-people-fill" style="color:#6366f1"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.TotalAbsent</div>
+                <div class="stat-label">Total Absent Today</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-pills mb-4" id="historyTab" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" id="today-tab" data-bs-toggle="pill" data-bs-target="#today" type="button">Today's Leaves</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending" type="button">Pending Approvals</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="dept-tab" data-bs-toggle="pill" data-bs-target="#dept" type="button">Department Wise Details</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="stats-tab" data-bs-toggle="pill" data-bs-target="#stats" type="button">Employee/Manager Statistics</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="historyTabContent">
+    <!-- Today's Leaves -->
+    <div class="tab-pane fade show active" id="today" role="tabpanel">
+        <div class="admin-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Period</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(Model.TodayLeaves.Any()) {
+                        @foreach (var leave in Model.TodayLeaves) {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@leave.EmployeeName</div>
+                                    <div class="text-muted smaller">@leave.EmployeeEmail</div>
+                                </td>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">@leave.LeaveTypeName</span></td>
+                                <td>@leave.StartDate.ToString("dd MMM") - @leave.EndDate.ToString("dd MMM yyyy")</td>
+                                <td>@leave.TotalDays Days</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                        }
+                    } else {
+                        <tr><td colspan="5" class="text-center py-4">No employees on leave today.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="tab-pane fade" id="pending" role="tabpanel">
+        <div class="admin-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Requested On</th>
+                        <th>Period</th>
+                        <th>Days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(Model.PendingLeaves.Any()) {
+                        @foreach (var leave in Model.PendingLeaves) {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@leave.EmployeeName</div>
+                                    <div class="text-muted smaller">@leave.EmployeeEmail</div>
+                                </td>
+                                <td><span class="badge bg-warning bg-opacity-10 text-warning">@leave.LeaveTypeName</span></td>
+                                <td>@leave.DateRequested.ToString("dd MMM yyyy")</td>
+                                <td>@leave.StartDate.ToString("dd MMM") - @leave.EndDate.ToString("dd MMM yyyy")</td>
+                                <td>@leave.TotalDays Days</td>
+                            </tr>
+                        }
+                    } else {
+                        <tr><td colspan="5" class="text-center py-4">No pending approvals.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Department Wise Details -->
+    <div class="tab-pane fade" id="dept" role="tabpanel">
+        <div class="row g-4">
+            @foreach (var dept in Model.DepartmentStats) {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                        <div class="card-header bg-white border-bottom-0 py-3">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-diagram-3 me-2 text-primary"></i>@dept.DepartmentName</h6>
+                        </div>
+                        <div class="card-body pt-0">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Total Employees</span>
+                                <span class="fw-bold">@dept.TotalEmployees</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">On Leave Today</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger">@dept.OnLeaveToday</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Pending Approvals</span>
+                                <span class="badge bg-info bg-opacity-10 text-info">@dept.PendingApprovals</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Employee Statistics -->
+    <div class="tab-pane fade" id="stats" role="tabpanel">
+        <div class="admin-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Employee/Manager Name</th>
+                        <th>Role</th>
+                        <th>Total Approved Leaves</th>
+                        <th>Pending Requests</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stat in Model.EmployeeStats) {
+                        <tr>
+                            <td class="fw-semibold">@stat.EmployeeName</td>
+                            <td>
+                                @if(stat.Role == "Admin") { <span class="badge bg-dark">Admin</span> }
+                                else if(stat.Role == "Manager") { <span class="badge bg-primary">Manager</span> }
+                                else { <span class="badge bg-secondary">Employee</span> }
+                            </td>
+                            <td><span class="fw-bold">@stat.TotalLeavesTaken</span></td>
+                            <td>@stat.PendingRequests</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .smaller { font-size: 0.75rem; }
+        .nav-pills .nav-link {
+            border-radius: 8px;
+            color: #64748b;
+            font-weight: 500;
+            padding: 10px 20px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #6366f1;
+            color: #fff;
+        }
+    </style>
+}

@@ -1,28 +1,28 @@
 @model LMS.Models.EmployeeDashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
 }
 
 <div class="row g-4 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card" style="border-left-color:#4070f4">
-            <p>Pending Requests</p>
-            <h2>@Model.PendingRequests</h2>
+        <div class="stat-card shadow-sm" style="border-left: 5px solid #4070f4; background: white; padding: 1.5rem; border-radius: 12px;">
+            <p class="text-muted small fw-bold text-uppercase mb-1">Pending Requests</p>
+            <h2 class="fw-bold mb-0" style="color: #4070f4">@Model.PendingRequests</h2>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card" style="border-left-color:#28a745">
-            <p>Approved This Year</p>
-            <h2>@Model.ApprovedThisYear</h2>
+        <div class="stat-card shadow-sm" style="border-left: 5px solid #28a745; background: white; padding: 1.5rem; border-radius: 12px;">
+            <p class="text-muted small fw-bold text-uppercase mb-1">Approved (Year)</p>
+            <h2 class="fw-bold mb-0" style="color: #28a745">@Model.ApprovedThisYear</h2>
         </div>
     </div>
     @foreach (var b in Model.LeaveBalances.Take(2))
     {
         <div class="col-sm-6 col-xl-3">
-            <div class="stat-card" style="border-left-color:#fd7e14">
-                <p>@b.LeaveTypeName Remaining</p>
-                <h2>@b.Remaining <small style="font-size:14px;color:#aaa">/ @b.Allocated</small></h2>
+            <div class="stat-card shadow-sm" style="border-left: 5px solid #fd7e14; background: white; padding: 1.5rem; border-radius: 12px;">
+                <p class="text-muted small fw-bold text-uppercase mb-1">@b.LeaveTypeName Remaining</p>
+                <h2 class="fw-bold mb-0" style="color: #fd7e14">@b.Remaining <small class="text-muted" style="font-size:14px">/ @b.Allocated</small></h2>
             </div>
         </div>
     }

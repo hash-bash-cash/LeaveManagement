@@ -13,7 +13,6 @@ public class UserViewModel
     public string Phone { get; set; } = string.Empty;
     public string Shift { get; set; } = string.Empty;
     public int? DepartmentId { get; set; }
-    public int? TeamId { get; set; }
     public string? ManagerId { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsActive { get; set; }

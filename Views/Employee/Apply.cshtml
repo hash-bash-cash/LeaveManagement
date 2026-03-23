@@ -1,7 +1,7 @@
 @model LMS.Models.ApplyLeaveViewModel
 @{
     ViewData["Title"] = "Apply for Leave";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
 }
 
 <div class="row justify-content-center">
@@ -31,7 +31,7 @@
                     <option value="">— Select Leave Type —</option>
                     @foreach (var t in Model.LeaveTypes)
                     {
-                        <option value="@t.Id">@t.Name (@t.DefaultDays days allocated)</option>
+                        <option value="@t.Id">@t.Name</option>
                     }
                 </select>
             </div>
@@ -62,10 +62,33 @@
                           placeholder="Briefly describe the reason for your leave..." required></textarea>
             </div>
 
+            <!-- Bereavement Details Section -->
+            <div id="bereavementSection" style="display:none" class="col-md-12">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-danger"><i class="fa-solid fa-heart me-2"></i>Bereavement Details</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Date of Death</label>
+                                <input asp-for="DateOfDeath" class="form-control form-control-sm" type="date" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Deceased Name</label>
+                                <input asp-for="DeceasedName" class="form-control form-control-sm" placeholder="Full Name" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Relationship</label>
+                                <input asp-for="DeceasedRelationship" class="form-control form-control-sm" placeholder="e.g. Spouse, Parent" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-md-12">
-                <label class="form-label fw-semibold">Supporting Document (Optional)</label>
-                <input asp-for="Attachment" class="form-control" type="file" />
-                <div class="form-text mt-1 small">PDF, JPG, or PNG (e.g. Medical Certificate)</div>
+                <label class="form-label fw-semibold">Supporting Document <span id="docRequired" class="text-danger" style="display:none">*</span></label>
+                <input asp-for="Attachment" class="form-control" type="file" id="attachmentInput" />
+                <div class="form-text mt-1 small">PDF, JPG, or PNG <span id="docHint">(e.g. Medical Certificate)</span></div>
             </div>
         </div>
 
@@ -104,11 +127,50 @@ function updateDays() {
     }
 }
 
+const leaveTypes = @Html.Raw(Json.Serialize(Model.LeaveTypes));
+
+function updateUiForLeaveType() {
+    const selectedId = document.getElementById('LeaveTypeId').value;
+    const type = leaveTypes.find(t => t.id == selectedId);
+    
+    if (type) {
+        // Bereavement Logic (BL)
+        if (type.code === 'BL') {
+            document.getElementById('bereavementSection').style.display = 'block';
+            document.getElementById('DateOfDeath').required = true;
+            document.getElementById('DeceasedName').required = true;
+        } else {
+            document.getElementById('bereavementSection').style.display = 'none';
+            document.getElementById('DateOfDeath').required = false;
+            document.getElementById('DeceasedName').required = false;
+        }
+
+        // Supporting Document Logic (SL usually requires it)
+        if (type.code === 'SL' || type.code === 'ML' || type.code === 'BL') {
+            document.getElementById('docRequired').style.display = 'inline';
+            document.getElementById('attachmentInput').required = true;
+            document.getElementById('docHint').textContent = '(Required for this leave type)';
+        } else {
+            document.getElementById('docRequired').style.display = 'none';
+            document.getElementById('attachmentInput').required = false;
+            document.getElementById('docHint').textContent = '(Optional)';
+        }
+    } else {
+        document.getElementById('bereavementSection').style.display = 'none';
+        document.getElementById('docRequired').style.display = 'none';
+    }
+}
+
+document.getElementById('LeaveTypeId').addEventListener('change', updateUiForLeaveType);
 document.getElementById('startDate').addEventListener('change', updateDays);
 document.getElementById('endDate').addEventListener('change', function(){
     const s = document.getElementById('startDate').value;
     if (s && this.value < s) this.value = s;
     updateDays();
 });
+
+// Initial call
+updateUiForLeaveType();
+updateDays();
 </script>
 }

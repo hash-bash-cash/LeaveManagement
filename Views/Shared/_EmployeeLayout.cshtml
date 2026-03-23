@@ -210,6 +210,10 @@
            asp-controller="Employee" asp-action="Holidays">
             <i class="fa-solid fa-calendar-days"></i> Holiday Calendar
         </a>
+        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "LeavePolicies" ? "active" : "")" 
+           asp-controller="Employee" asp-action="LeavePolicies">
+            <i class="fa-solid fa-book-open"></i> Leave Policies
+        </a>
 
         <div class="nav-section-title">Account</div>
         <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")" 

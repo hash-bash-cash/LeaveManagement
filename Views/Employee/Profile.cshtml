@@ -1,7 +1,7 @@
 @model LMS.Models.ApplicationUser
 @{
     ViewData["Title"] = "My Profile";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
     var initials = $"{Model.FirstName?.Substring(0,1)}{Model.LastName?.Substring(0,1)}".ToUpper();
 }
 
@@ -51,13 +51,23 @@
         <div class="content-card">
             <h6 class="fw-bold mb-3">Organizational Details</h6>
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-6 mb-2">
                     <label class="text-muted small">Department</label>
                     <p class="fw-semibold mb-0">@(Model.Department?.Name ?? "Not Assigned")</p>
                 </div>
-                <div class="col-md-6">
-                    <label class="text-muted small">Team</label>
-                    <p class="fw-semibold mb-0">@(Model.Team?.Name ?? "Not Assigned")</p>
+                <div class="col-md-6 mb-2">
+                    <label class="text-muted small">Reporting Manager</label>
+                    <p class="fw-semibold mb-0 text-primary">
+                        @if (Model.Manager != null)
+                        {
+                            <i class="fa-solid fa-user-tie me-1"></i> @($"{Model.Manager.FirstName} {Model.Manager.LastName}")
+                        }
+                        else { <span class="text-muted">Not Assigned</span> }
+                    </p>
+                    @if (Model.Manager != null)
+                    {
+                        <small class="text-muted d-block">@Model.Manager.Email</small>
+                    }
                 </div>
                 <div class="col-md-6">
                     <label class="text-muted small">Shift</label>

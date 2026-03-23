@@ -1,74 +1,117 @@
 @model IEnumerable<LMS.Models.UserViewModel>
-
 @{
-    ViewData["Title"] = "Active Users";
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">@ViewData["Title"]</h2>
-        <a asp-controller="Users" asp-action="Pending" class="btn btn-primary shadow-sm hover-up">
-            <i class="fa-solid fa-user-clock me-2"></i> Pending Registrations
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-people me-2" style="color:var(--admin-accent)"></i>User Management</h2>
+        <p class="text-muted mb-0">Overview of all active personnel within the organization.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Users" asp-action="Pending" class="btn btn-primary shadow-sm d-flex align-items-center gap-2">
+            <i class="bi bi-person-check fs-5"></i> 
+            <span>Pending Approvals</span>
+            <span class="badge bg-white text-primary rounded-pill" style="font-size: 0.7rem;">New</span>
         </a>
     </div>
+</div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm mb-4">@TempData["Success"]</div>
-    }
-
-    <div class="card border-0 shadow-sm overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light text-muted small text-uppercase">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Employee Profile</th>
+                    <th class="py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Designation / Role</th>
+                    <th class="py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Contact Info</th>
+                    <th class="py-3 text-muted fw-bold small text-uppercase text-end pe-4" style="letter-spacing: 0.5px;">Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model) {
                     <tr>
-                        <th class="ps-4">User Details</th>
-                        <th>Role</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle">
+                                    @item.FirstName.Substring(0,1)@item.LastName.Substring(0,1)
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark mb-0" style="font-size: 0.95rem;">@item.FirstName @item.LastName</div>
+                                    <div class="text-muted small">ID: @(item.EmployeeCode ?? "N/A")</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @{
+                                var roleClass = item.Role switch {
+                                    "Admin" => "badge-admin",
+                                    "Manager" => "badge-manager",
+                                    _ => "badge-employee"
+                                };
+                            }
+                            <span class="badge @roleClass">@item.Role</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="small text-dark fw-medium"><i class="bi bi-envelope me-1 text-muted"></i>@item.Email</span>
+                                <span class="small text-muted"><i class="bi bi-telephone me-1 text-muted"></i>@(item.Phone ?? "No contact")</span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Options
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="border-radius: 12px; font-size: 0.88rem;">
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="LeaveAllocations" asp-action="Details" asp-route-id="@item.Id">
+                                            <i class="bi bi-calendar-check me-2 text-primary"></i> Manage Allocations
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-action="Edit" asp-route-id="@item.Id">
+                                            <i class="bi bi-shield-lock me-2 text-warning"></i> Change Privileges
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item py-2 text-danger" href="#">
+                                            <i class="bi bi-person-x me-2"></i> Deactivate Account
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model) {
-                        <tr>
-                            <td class="ps-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-init me-3">@item.FirstName.Substring(0,1)</div>
-                                    <div>
-                                        <div class="fw-bold">@item.FirstName @item.LastName</div>
-                                        <small class="text-muted">@item.Email</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge @(item.Role == "Admin" ? "bg-dark" : item.Role == "Manager" ? "bg-indigo" : "bg-primary") px-3">
-                                    @item.Role
-                                </span>
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group shadow-sm">
-                                    <a asp-controller="LeaveAllocations" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                        <i class="fa-solid fa-scale-balanced me-1"></i> Manage Leave
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning">
-                                        <i class="fa-solid fa-user-shield me-1"></i> Change Role
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
 <style>
-    .avatar-init {
-        width: 40px; height: 40px;
+    .avatar-circle {
+        width: 44px; height: 44px;
         background: #f1f5f9;
+        color: #6366f1;
         display: flex; align-items: center; justify-content: center;
-        border-radius: 10px; font-weight: 700; color: #1e293b;
+        border-radius: 50%;
+        font-weight: 700; font-size: 0.9rem;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-    .bg-indigo { background-color: #6366f1; color: white; }
-    .hover-up:hover { transform: translateY(-2px); transition: all 0.2s; }
+    
+    .badge-admin { background: #fee2e2; color: #991b1b; }
+    .badge-manager { background: #e0f2fe; color: #075985; }
+    .badge-employee { background: #f1f5f9; color: #475569; }
+    
+    .badge { border-radius: 6px; padding: 6px 10px; font-weight: 600; font-size: 0.75rem; }
+    
+    .table thead th { border-top: none; }
+    .table tbody tr { transition: all 0.2s; }
+    .table tbody tr:hover { background-color: #fcfdfe; }
+    
+    .rounded-4 { border-radius: 1rem !important; }
 </style>

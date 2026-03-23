@@ -1,0 +1,46 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Credit Compensatory Off";
+    Layout = "_ManagerLayout";
+    var teamMembers = ViewBag.TeamMembers as List<LMS.Models.ApplicationUser>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="content-card">
+            <h4 class="mb-4">Credit Compensatory Off (CO)</h4>
+            
+            <form asp-action="CreditCO" method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Team Member</label>
+                    <select name="employeeId" class="form-select" required>
+                        <option value="">-- Select Member --</option>
+                        @if (teamMembers != null)
+                        {
+                            foreach(var member in teamMembers)
+                            {
+                                <option value="@member.Id">@member.FirstName @member.LastName (@member.Email)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date Worked (Holiday / Weekend)</label>
+                    <input type="date" name="dateWorked" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    <small class="text-muted">The CO will expire 1 month after this date.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Reason / Work Details</label>
+                    <textarea name="reason" class="form-control" rows="3" required placeholder="Describe the extra work done..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="MyTeam" class="btn btn-light border">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">Credit CO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -25,7 +25,6 @@ public class DepartmentsController : Controller
     {
         var departments = await _context.Departments
             .Include(d => d.SubDepartments)
-            .Include(d => d.Teams)
             .Include(d => d.Manager)
             .Include(d => d.ParentDepartment)
             .OrderBy(d => d.Name)
@@ -53,6 +52,11 @@ public class DepartmentsController : Controller
             TempData["Success"] = "Department created successfully.";
             return RedirectToAction(nameof(Index));
         }
+
+        // Debug: Log validation errors to TempData
+        var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+        TempData["Error"] = "Validation failed: " + string.Join("; ", errors);
+        
         await PopulateViewBags();
         return View(model);
     }

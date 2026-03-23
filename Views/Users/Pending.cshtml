@@ -1,39 +1,95 @@
 @model IEnumerable<LMS.Models.UserViewModel>
-
 @{
     ViewData["Title"] = "Pending Registrations";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Pending Registrations</h1>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>@Html.DisplayNameFor(model => model.Email)</th>
-            <th>@Html.DisplayNameFor(model => model.EmployeeCode)</th>
-            <th>@Html.DisplayNameFor(model => model.Phone)</th>
-            <th>@Html.DisplayNameFor(model => model.Shift)</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>@item.FirstName @item.LastName</td>
-            <td>@Html.DisplayFor(modelItem => item.Email)</td>
-            <td>@Html.DisplayFor(modelItem => item.EmployeeCode)</td>
-            <td>@Html.DisplayFor(modelItem => item.Phone)</td>
-            <td>@Html.DisplayFor(modelItem => item.Shift)</td>
-            <td>
-                <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-success btn-sm">Review & Approve</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-person-check me-2" style="color:var(--admin-accent)"></i>Pending Registrations</h2>
+        <p class="text-muted mb-0">Review and verify new employee registrations before granting system access.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to Users
+    </a>
+</div>
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info mt-3">There are no pending registrations awaiting approval.</div>
+    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+        <div class="card-body">
+            <div class="mb-3">
+                <i class="bi bi-check2-all" style="font-size: 4rem; color: #cbd5e1;"></i>
+            </div>
+            <h4 class="fw-bold">All caught up!</h4>
+            <p class="text-muted mx-auto" style="max-width: 400px;">There are no pending registrations awaiting your approval at this time. All new employees have been reviewed.</p>
+            <a asp-action="Index" class="btn btn-primary mt-3 shadow-sm px-4">View Active Users</a>
+        </div>
+    </div>
 }
+else
+{
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Applicant</th>
+                        <th class="py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Contact Detail</th>
+                        <th class="py-3 text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Employee Data</th>
+                        <th class="py-3 text-muted fw-bold small text-uppercase text-end pe-4" style="letter-spacing: 0.5px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle-pending">
+                                        @item.FirstName.Substring(0,1)
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark mb-0">@item.FirstName @item.LastName</div>
+                                        <div class="text-muted small">Registered on: Today</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small fw-medium text-dark"><i class="bi bi-envelope me-2 text-muted"></i>@item.Email</div>
+                                <div class="small text-muted"><i class="bi bi-telephone me-2 text-muted"></i>@(item.Phone ?? "N/A")</div>
+                            </td>
+                            <td>
+                                <div class="badge bg-light text-dark border mb-1">Code: @(item.EmployeeCode ?? "Pending")</div>
+                                <div class="small text-muted">Shift: @(item.Shift ?? "General")</div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                                    Review & Approve <i class="bi bi-chevron-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<style>
+    .avatar-circle-pending {
+        width: 44px; height: 44px;
+        background: #fef3c7;
+        color: #d97706;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        font-weight: 700; font-size: 1rem;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .table thead th { border-top: none; }
+    .table tbody tr { transition: all 0.2s; }
+    .table tbody tr:hover { background-color: #fffaf0; }
+    
+    .rounded-4 { border-radius: 1rem !important; }
+</style>

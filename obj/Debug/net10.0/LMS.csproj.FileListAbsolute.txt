@@ -384,3 +384,4 @@ C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\runtimes\wi
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\runtimes\win-x64\native\krb5_64.dll
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\runtimes\win-x64\native\krbcc64.dll
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\runtimes\win\lib\net8.0\System.Windows.Extensions.dll
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\obj\Debug\net10.0\compressed\52bid13gyb-{0}-huy1jsetyg-huy1jsetyg.gz

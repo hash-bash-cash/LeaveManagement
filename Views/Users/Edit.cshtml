@@ -1,35 +1,54 @@
 @model LMS.Models.UserViewModel
-
 @{
-    ViewData["Title"] = "Change User Role";
+    ViewData["Title"] = "Update System Role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Change Role</h1>
-<h4>@Model.FirstName @Model.LastName (@Model.Email)</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="FirstName" />
-            <input type="hidden" asp-for="LastName" />
-            <input type="hidden" asp-for="Email" />
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-8">
+        <div class="page-header text-center mb-4">
+            <h2><i class="bi bi-shield-lock me-2" style="color:#f59e0b"></i>Update User Role</h2>
+            <p class="text-muted">Modify access privileges for <strong>@Model.FirstName @Model.LastName</strong></p>
+        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Role" class="control-label">Assign Role</label>
-                @if (ViewBag.Roles != null)
-                {
-                    <select asp-for="Role" class="form-control" asp-items="@(new SelectList(ViewBag.Roles))"></select>
-                }
-                <span asp-validation-for="Role" class="text-danger"></span>
+        <div class="card border-0 shadow rounded-4 overflow-hidden">
+            <div class="bg-warning bg-opacity-10 p-4 text-center">
+                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 64px; height: 64px; border: 2px solid #f59e0b;">
+                    <span class="fs-4 fw-bold text-warning">@Model.FirstName[0]@Model.LastName[0]</span>
+                </div>
+                <div class="fw-bold fs-5">@Model.FirstName @Model.LastName</div>
+                <div class="small text-muted mb-1">@Model.Email</div>
             </div>
-            
-            <div class="form-group mb-3">
-                <input type="submit" value="Save Changes" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+
+            <div class="card-body p-4">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="FirstName" />
+                    <input type="hidden" asp-for="LastName" />
+                    <input type="hidden" asp-for="Email" />
+
+                    <div class="mb-4">
+                        <label asp-for="Role" class="form-label fw-bold small text-uppercase">Assign Role <span class="text-danger">*</span></label>
+                        <select asp-for="Role" class="form-select border-2" asp-items="@(new SelectList(ViewBag.Roles))" style="border-color: #f59e0b;"></select>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
+                        <div class="form-text mt-2 px-2 py-1 bg-light rounded" style="font-size: 0.78rem;">
+                            <i class="bi bi-info-circle me-1"></i> Changing a role will immediately update the user's dashboard and sidebar.
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-2">
+                        <button type="submit" class="btn btn-warning fw-bold py-2 shadow-sm">
+                            <i class="bi bi-save me-1"></i> Update Role
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary py-2">
+                             Cancel changes
+                        </a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 

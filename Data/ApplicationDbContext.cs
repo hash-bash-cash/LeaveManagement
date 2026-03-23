@@ -10,7 +10,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LeaveAllocation> LeaveAllocations { get; set; }
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
     public DbSet<Department> Departments { get; set; }
-    public DbSet<Team> Teams { get; set; }
     public DbSet<Holiday> Holidays { get; set; }
     public DbSet<CompensatoryOff> CompensatoryOffs { get; set; }
     public DbSet<Notification> Notifications { get; set; }

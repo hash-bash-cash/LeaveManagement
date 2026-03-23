@@ -154,7 +154,6 @@ public class UsersController : Controller
         {
             // Update User Organizational Details
             user.DepartmentId = model.DepartmentId;
-            user.TeamId = model.TeamId;
             user.ManagerId = model.ManagerId;
             
             // Activate User
@@ -187,7 +186,6 @@ public class UsersController : Controller
     {
         ViewBag.Roles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
         ViewBag.Departments = await _context.Departments.ToListAsync();
-        ViewBag.Teams = await _context.Teams.ToListAsync();
         
         // Find possible managers (users with Manager role)
         var managers = await _userManager.GetUsersInRoleAsync(Roles.Manager);

@@ -19,6 +19,7 @@ public class TeamMemberBalanceViewModel
     public string Email { get; set; } = string.Empty;
     public string Shift { get; set; } = string.Empty;
     public List<LeaveBalanceViewModel> Balances { get; set; } = new();
+    public List<LeaveRequest> History { get; set; } = new();
 }
 
 public class LeaveApprovalViewModel
@@ -35,6 +36,11 @@ public class LeaveApprovalViewModel
     public string? ManagerRemarks { get; set; }
     public int AvailableBalance { get; set; }
     public string? AttachmentPath { get; set; }
+
+    // Bereavement Details
+    public DateTime? DateOfDeath { get; set; }
+    public string? DeceasedName { get; set; }
+    public string? DeceasedRelationship { get; set; }
 }
 
 public class ManagerReportsViewModel

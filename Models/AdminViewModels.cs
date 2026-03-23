@@ -10,7 +10,7 @@ public class AdminDashboardViewModel
     public int ActiveLeaveRequests { get; set; }
     public int PendingApprovals { get; set; }
     public int TotalDepartments { get; set; }
-    public int TotalTeams { get; set; }
+    public int TotalSubDepartments { get; set; }
     public int EmployeesOnLeaveToday { get; set; }
     public int UpcomingHolidays { get; set; }
 
@@ -37,4 +37,34 @@ public class AdminLeaveRequestViewModel
     public DateTime? DateActioned { get; set; }
     public string? AttachmentPath { get; set; }
     public bool Cancelled { get; set; }
+}
+
+// ─── Admin Leave History VM ──────────────────────────────────────────────────
+public class AdminLeaveHistoryViewModel
+{
+    public int OnLeaveTodayCount { get; set; }
+    public int PendingApprovalsCount { get; set; }
+    public int TotalEmployees { get; set; }
+    public int TotalAbsent { get; set; } // Same as on leave today
+
+    public List<AdminLeaveRequestViewModel> TodayLeaves { get; set; } = new();
+    public List<AdminLeaveRequestViewModel> PendingLeaves { get; set; } = new();
+    public List<DepartmentLeaveStatsViewModel> DepartmentStats { get; set; } = new();
+    public List<EmployeeLeaveStatsViewModel> EmployeeStats { get; set; } = new();
+}
+
+public class DepartmentLeaveStatsViewModel
+{
+    public string DepartmentName { get; set; } = string.Empty;
+    public int TotalEmployees { get; set; }
+    public int OnLeaveToday { get; set; }
+    public int PendingApprovals { get; set; }
+}
+
+public class EmployeeLeaveStatsViewModel
+{
+    public string EmployeeName { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public int TotalLeavesTaken { get; set; }
+    public int PendingRequests { get; set; }
 }

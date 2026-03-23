@@ -1,42 +1,65 @@
 @model IEnumerable<LMS.Models.LeaveBalanceViewModel>
 @{
     ViewData["Title"] = "Leave Balance";
-    Layout = "_EmployeeLayout";
+    Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
 }
 
 <div class="row g-4 mb-4">
 @foreach (var b in Model)
 {
-    var pct = b.Allocated > 0 ? (b.Used * 100 / b.Allocated) : 0;
+    var isUnlimited = b.LeaveTypeCode == "LW" || b.LeaveTypeCode == "ML" || b.LeaveTypeCode == "BL";
+    var pct = isUnlimited ? 0 : (b.Allocated > 0 ? (b.Used * 100 / b.Allocated) : 0);
     var color = pct >= 80 ? "#dc3545" : pct >= 50 ? "#fd7e14" : "#28a745";
+    if (isUnlimited) color = "#6c757d";
+
     <div class="col-sm-6 col-xl-4">
         <div class="content-card text-center">
             <h6 class="text-muted fw-semibold mb-3">@b.LeaveTypeName</h6>
             <div style="position:relative;display:inline-block;width:120px;height:120px;margin-bottom:16px">
                 <svg viewBox="0 0 36 36" style="width:120px;height:120px;transform:rotate(-90deg)">
                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f0f0f0" stroke-width="3"/>
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="@color" stroke-width="3"
-                        stroke-dasharray="@pct 100" stroke-linecap="round"/>
+                    @if (!isUnlimited) {
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="@color" stroke-width="3"
+                            stroke-dasharray="@pct 100" stroke-linecap="round"/>
+                    }
                 </svg>
                 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
-                    <div style="font-size:22px;font-weight:700;color:@color">@b.Remaining</div>
-                    <div style="font-size:10px;color:#aaa">remaining</div>
+                    @if (isUnlimited)
+                    {
+                        <div style="font-size:22px;font-weight:700;color:@color">@b.Used</div>
+                        <div style="font-size:10px;color:#aaa">used</div>
+                    }
+                    else
+                    {
+                        <div style="font-size:22px;font-weight:700;color:@color">@b.Remaining</div>
+                        <div style="font-size:10px;color:#aaa">remaining</div>
+                    }
                 </div>
             </div>
-            <div class="row text-center g-0 border-top pt-3 mt-1">
-                <div class="col-4">
-                    <div class="fw-bold">@b.Allocated</div>
-                    <div class="text-muted small">Allocated</div>
+            
+            @if (isUnlimited)
+            {
+                <div class="mt-3 text-muted small">
+                    Special leave type. <br/> See policies for eligibility.
                 </div>
-                <div class="col-4 border-start border-end">
-                    <div class="fw-bold text-danger">@b.Used</div>
-                    <div class="text-muted small">Used</div>
+            }
+            else
+            {
+                <div class="row text-center g-0 border-top pt-3 mt-1">
+                    <div class="col-4">
+                        <div class="fw-bold">@b.Allocated</div>
+                        <div class="text-muted small">Allocated</div>
+                    </div>
+                    <div class="col-4 border-start border-end">
+                        <div class="fw-bold text-danger">@b.Used</div>
+                        <div class="text-muted small">Used</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-success">@b.Remaining</div>
+                        <div class="text-muted small">Available</div>
+                    </div>
                 </div>
-                <div class="col-4">
-                    <div class="fw-bold text-success">@b.Remaining</div>
-                    <div class="text-muted small">Available</div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 }

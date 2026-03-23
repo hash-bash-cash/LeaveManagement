@@ -4,34 +4,51 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="page-header mb-4">
-    <h2><i class="bi bi-person-check me-2 text-success"></i>User Onboarding</h2>
-    <p>Review and assign organizational roles to <strong>@Model.FirstName @Model.LastName</strong></p>
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-person-plus me-2 text-success"></i>Employee Onboarding</h2>
+        <p class="text-muted mb-0">Complete the organization profile for new member review.</p>
+    </div>
+    <a asp-action="Pending" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <i class="bi bi-x-lg me-1"></i> Discard
+    </a>
 </div>
 
 <div class="row">
     <!-- Left: Profile Info -->
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body text-center p-4">
-                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
-                    <span class="fs-1 fw-bold text-primary">@Model.FirstName[0]</span>
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div class="bg-primary bg-opacity-10 p-5 text-center">
+                <div class="avatar-giant mx-auto mb-3">
+                    @Model.FirstName[0]@Model.LastName[0]
                 </div>
                 <h4 class="fw-bold mb-1">@Model.FirstName @Model.LastName</h4>
-                <p class="text-muted small mb-3">@Model.Email</p>
-                
-                <div class="list-group list-group-flush text-start border-top pt-3">
-                    <div class="list-group-item bg-transparent px-0 border-0">
-                        <small class="text-muted d-block">Employee Code</small>
-                        <span class="fw-semibold">@(string.IsNullOrEmpty(Model.EmployeeCode) ? "Not Assigned" : Model.EmployeeCode)</span>
+                <div class="badge bg-white text-primary border rounded-pill px-3 py-1 mb-2">New Registrant</div>
+            </div>
+            
+            <div class="card-body p-4">
+                <h6 class="fw-bold small text-uppercase text-muted mb-3">Submitted Information</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded p-2 text-muted"><i class="bi bi-envelope"></i></div>
+                        <div>
+                            <div class="small text-muted">Email Address</div>
+                            <div class="fw-medium">@Model.Email</div>
+                        </div>
                     </div>
-                    <div class="list-group-item bg-transparent px-0 border-0">
-                        <small class="text-muted d-block">Phone Number</small>
-                        <span class="fw-semibold">@(string.IsNullOrEmpty(Model.Phone) ? "Not Provided" : Model.Phone)</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded p-2 text-muted"><i class="bi bi-telephone"></i></div>
+                        <div>
+                            <div class="small text-muted">Phone Number</div>
+                            <div class="fw-medium">@(string.IsNullOrEmpty(Model.Phone) ? "Not Provided" : Model.Phone)</div>
+                        </div>
                     </div>
-                    <div class="list-group-item bg-transparent px-0 border-0">
-                        <small class="text-muted d-block">Preferred Shift</small>
-                        <span class="badge bg-info bg-opacity-10 text-info">@Model.Shift</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded p-2 text-muted"><i class="bi bi-clock"></i></div>
+                        <div>
+                            <div class="small text-muted">Preferred Shift</div>
+                            <div class="fw-medium">@Model.Shift</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -40,9 +57,9 @@
 
     <!-- Right: Assignment Form -->
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="fw-bold mb-0">Role & Hierarchy Assignment</h5>
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white py-3 border-0 mt-2 px-4">
+                <h5 class="fw-bold mb-0">Step 2: Organizational Placement</h5>
             </div>
             <div class="card-body p-4">
                 <form asp-action="Review" method="post">
@@ -52,47 +69,67 @@
                     <input type="hidden" asp-for="LastName" />
                     <input type="hidden" asp-for="Email" />
 
-                    <div class="row g-3 mb-4">
+                    <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="Role" class="form-label fw-bold">System Role <span class="text-danger">*</span></label>
-                            <select asp-for="Role" class="form-select border-primary" asp-items="@(new SelectList(ViewBag.Roles))" required></select>
-                            <div class="form-text">Primary access level in the system</div>
+                            <label asp-for="Role" class="form-label fw-bold small text-muted">SYSTEM ROLE <span class="text-danger">*</span></label>
+                            <select asp-for="Role" class="form-select border-2 py-2" asp-items="@(new SelectList(ViewBag.Roles))" required></select>
+                            <div class="form-text small">Defines the access permissions</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EmployeeCode" class="form-label fw-bold small text-muted">EMPLOYEE ID / CODE</label>
+                            <input asp-for="EmployeeCode" class="form-control border-2 py-2" placeholder="e.g. EMP-2024-001" />
+                            <div class="form-text small">Unique company identifier</div>
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-4">
+                    <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
-                            <select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
-                                <option value="">-- Select Department --</option>
+                            <label asp-for="DepartmentId" class="form-label fw-bold small text-muted">DEPARTMENTAL UNIT</label>
+                            <select asp-for="DepartmentId" class="form-select border-2 py-2" asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
+                                <option value="">-- Unassigned --</option>
                             </select>
+                            <div class="form-text small">Primary organizational unit</div>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="TeamId" class="form-label fw-bold">Operational Team</label>
-                            <select asp-for="TeamId" class="form-select" asp-items="@(new SelectList(ViewBag.Teams, "Id", "Name"))">
-                                <option value="">-- Select Team --</option>
+                            <label asp-for="ManagerId" class="form-label fw-bold small text-muted">REPORTING LINE (MANAGER)</label>
+                            <select asp-for="ManagerId" class="form-select border-2 py-2" asp-items="@(new SelectList(ViewBag.Managers, "Id", "Email"))">
+                                <option value="">-- No direct manager --</option>
                             </select>
+                            <div class="form-text small">Receiver of all leave requests</div>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="ManagerId" class="form-label fw-bold">Reporting Manager</label>
-                        <select asp-for="ManagerId" class="form-select" asp-items="@(new SelectList(ViewBag.Managers, "Id", "Email"))">
-                            <option value="">-- Select Manager --</option>
-                        </select>
-                        <div class="form-text text-muted italic small"><i class="bi bi-info-circle me-1"></i> The assigned manager will receive and review leave requests from this user.</div>
+                    <div class="alert alert-warning border-0 rounded-3 mb-4 d-flex">
+                        <i class="bi bi-info-circle-fill me-3 fs-3 text-warning"></i>
+                        <p class="mb-0 small py-1">Review all assignments carefully. Once activated, the user will receive an automated notification and gain access based on the assigned role.</p>
                     </div>
 
-                    <hr class="my-4">
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a asp-action="Pending" class="btn btn-outline-secondary px-4">Save for Later</a>
-                        <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
-                            <i class="bi bi-check2-circle me-1"></i> Activate & Send Welcome
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success flex-grow-1 fw-bold py-2 shadow-sm rounded-3">
+                            <i class="bi bi-person-check-fill me-2"></i> Approve & Activate Account
                         </button>
+                        <a asp-action="Pending" class="btn btn-light border py-2 px-4 rounded-3">
+                            Later
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .avatar-giant {
+        width: 90px; height: 90px;
+        background: #fff;
+        color: var(--bs-primary);
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 28px;
+        font-size: 2.5rem; font-weight: 800;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .rounded-4 { border-radius: 1.25rem !important; }
+    .form-select, .form-control { border-radius: 10px; }
+    .btn { transition: all 0.2s; }
+    .btn:hover { transform: translateY(-1px); }
+</style>

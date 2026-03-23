@@ -12,7 +12,7 @@ public class HomeController : Controller
         if (User.Identity?.IsAuthenticated == true)
         {
             if (User.IsInRole(Roles.Admin))
-                return RedirectToAction("Index", "Users");
+                return RedirectToAction("Dashboard", "Admin");
 
             if (User.IsInRole(Roles.Manager))
                 return RedirectToAction("MyTeam", "Manager");

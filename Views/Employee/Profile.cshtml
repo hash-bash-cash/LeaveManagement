@@ -1,79 +1,200 @@
-@model LMS.Models.ApplicationUser
+@model LMS.Models.UserProfileViewModel
 @{
     ViewData["Title"] = "My Profile";
     Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
-    var initials = $"{Model.FirstName?.Substring(0,1)}{Model.LastName?.Substring(0,1)}".ToUpper();
+    var initials = $"{Model.FirstName?.Substring(0, 1)}{Model.LastName?.Substring(0, 1)}".ToUpper();
 }
 
-<div class="row g-4">
-    <div class="col-lg-4">
-        <div class="content-card text-center">
-            <div style="width:90px;height:90px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:700;color:white">
-                @initials
-            </div>
-            <h5 class="fw-bold">@Model.FirstName @Model.LastName</h5>
-            <p class="text-muted mb-1">@Model.Email</p>
-            <span class="badge" style="background:var(--accent)">@Model.Shift Shift</span>
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- left Sidebar: Profile summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm overflow-hidden text-center sticky-top" style="top: 2rem;">
+                <div class="card-body py-5">
+                    <div class="mb-4 position-relative d-inline-block">
+                        <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto" 
+                             style="width: 120px; height: 120px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); font-size: 3rem; font-weight: 700; color: white;">
+                            @initials
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-white rounded-circle shadow-sm" title="Active Account"></span>
+                    </div>
+                    <h3 class="fw-bold mb-1">@Model.FirstName @Model.LastName</h3>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-id-badge me-1"></i> @Model.EmployeeCode</p>
+                    
+                    <div class="badge bg-soft-primary text-primary px-3 py-2 mb-4">
+                        <i class="fa-solid fa-briefcase me-1"></i> @Model.Shift Shift
+                    </div>
 
-            <hr class="my-3">
-            <div class="text-start">
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted small">Status</span>
-                    <span class="badge badge-approved">@Model.Status</span>
-                </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted small">Date Joined</span>
-                    <span class="small fw-semibold">@Model.DateJoined.ToLocalTime().ToString("dd MMM yyyy")</span>
-                </div>
-                <div class="d-flex justify-content-between py-2">
-                    <span class="text-muted small">Employee Code</span>
-                    <span class="small fw-semibold">@(string.IsNullOrEmpty(Model.EmployeeCode) ? "N/A" : Model.EmployeeCode)</span>
+                    <div class="list-group list-group-flush text-start small border-top pt-3">
+                        <div class="list-group-item bg-transparent border-0 d-flex justify-content-between px-0">
+                            <span class="text-muted">Email</span>
+                            <span class="fw-semibold">@Model.Email</span>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 d-flex justify-content-between px-0">
+                            <span class="text-muted">Joining Date</span>
+                            <span class="fw-semibold">@Model.DateJoined.ToString("dd MMM yyyy")</span>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 d-flex justify-content-between px-0">
+                            <span class="text-muted">Department</span>
+                            <span class="fw-semibold">@Model.DepartmentName</span>
+                        </div>
+                        <div class="list-group-item bg-transparent border-0 d-flex justify-content-between px-0">
+                            <span class="text-muted">Reports To</span>
+                            <span class="fw-semibold text-primary">@Model.ManagerName</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-lg-8">
-        <div class="content-card mb-4">
-            <h6 class="fw-bold mb-3">Contact Information</h6>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="text-muted small">Email Address</label>
-                    <p class="fw-semibold mb-0">@Model.Email</p>
+        <!-- Right Side: Edit Form -->
+        <div class="col-lg-8">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success border-0 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="fa-solid fa-circle-check me-2 fs-5"></i>
+                    @TempData["Success"]
                 </div>
-                <div class="col-md-6">
-                    <label class="text-muted small">Phone</label>
-                    <p class="fw-semibold mb-0">@(string.IsNullOrEmpty(Model.Phone) ? "N/A" : Model.Phone)</p>
+            }
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold mb-0 text-dark">Personal Information</h5>
+                    <span class="badge bg-light text-muted fw-normal">Settings</span>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Profile" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="row g-4">
+                            <!-- Basic details -->
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label fw-semibold text-muted small uppercase">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-user text-muted"></i></span>
+                                    <input asp-for="FirstName" class="form-control bg-light border-0 shadow-none ps-0" placeholder="Enter first name" />
+                                </div>
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label fw-semibold text-muted small uppercase">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-user text-muted"></i></span>
+                                    <input asp-for="LastName" class="form-control bg-light border-0 shadow-none ps-0" placeholder="Enter last name" />
+                                </div>
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label fw-semibold text-muted small uppercase">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-phone text-muted"></i></span>
+                                    <input asp-for="Phone" class="form-control bg-light border-0 shadow-none ps-0" placeholder="+1 (555) 000-0000" />
+                                </div>
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Gender" class="form-label fw-semibold text-muted small uppercase">Gender</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-venus-mars text-muted"></i></span>
+                                    <select asp-for="Gender" class="form-select bg-light border-0 shadow-none ps-0">
+                                        <option value="">Select Gender...</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="Gender" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DateOfBirth" class="form-label fw-semibold text-muted small uppercase">Date of Birth</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-calendar-day text-muted"></i></span>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control bg-light border-0 shadow-none ps-0" />
+                                </div>
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Shift" class="form-label fw-semibold text-muted small uppercase">Preferred Shift</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-clock text-muted"></i></span>
+                                    <select asp-for="Shift" class="form-select bg-light border-0 shadow-none ps-0">
+                                        <option value="Morning">Morning</option>
+                                        <option value="Evening">Evening</option>
+                                        <option value="Night">Night</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="Shift" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Address" class="form-label fw-semibold text-muted small uppercase">Residential Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-location-dot text-muted"></i></span>
+                                    <textarea asp-for="Address" class="form-control bg-light border-0 shadow-none ps-0" rows="3" placeholder="Enter your full address"></textarea>
+                                </div>
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 mt-5">
+                                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">
+                                    <i class="fa-solid fa-save me-2"></i> Save Changes
+                                </button>
+                                <button type="reset" class="btn btn-light px-4 py-2 ms-2">Discard</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
-
-        <div class="content-card">
-            <h6 class="fw-bold mb-3">Organizational Details</h6>
-            <div class="row g-3">
-                <div class="col-md-6 mb-2">
-                    <label class="text-muted small">Department</label>
-                    <p class="fw-semibold mb-0">@(Model.Department?.Name ?? "Not Assigned")</p>
-                </div>
-                <div class="col-md-6 mb-2">
-                    <label class="text-muted small">Reporting Manager</label>
-                    <p class="fw-semibold mb-0 text-primary">
-                        @if (Model.Manager != null)
-                        {
-                            <i class="fa-solid fa-user-tie me-1"></i> @($"{Model.Manager.FirstName} {Model.Manager.LastName}")
-                        }
-                        else { <span class="text-muted">Not Assigned</span> }
-                    </p>
-                    @if (Model.Manager != null)
-                    {
-                        <small class="text-muted d-block">@Model.Manager.Email</small>
-                    }
-                </div>
-                <div class="col-md-6">
-                    <label class="text-muted small">Shift</label>
-                    <p class="fw-semibold mb-0">@(string.IsNullOrEmpty(Model.Shift) ? "N/A" : Model.Shift)</p>
+            
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="rounded-circle bg-white p-3 shadow-sm me-3">
+                        <i class="fa-solid fa-shield-halved text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Account Security</h6>
+                        <p class="text-muted small mb-0">Manage your password and security settings to keep your account safe.</p>
+                    </div>
+                    <button class="btn btn-white border shadow-sm ms-auto fw-bold px-4">Manage</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .bg-soft-primary {
+        background-color: rgba(79, 172, 254, 0.1);
+    }
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .input-group-text {
+        border-radius: 8px 0 0 8px !important;
+    }
+    .form-control, .form-select {
+        border-radius: 0 8px 8px 0 !important;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border: none;
+        border-radius: 8px;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+        transform: translateY(-1px);
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -384,3 +384,5 @@ C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\obj\Debug\net10.0\refint\LMS.
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\obj\Debug\net10.0\LMS.pdb
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\obj\Debug\net10.0\LMS.genruntimeconfig.cache
 C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\obj\Debug\net10.0\ref\LMS.dll
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\MailKit.dll
+C:\Users\ASUS\OneDrive\Desktop\lms_antigravity\LMS\bin\Debug\net10.0\MimeKit.dll

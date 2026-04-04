@@ -307,11 +307,11 @@ public class EmployeeController : Controller
                          && !r.Cancelled)
                 .ToListAsync();
 
-            var usedDays = usedRequests.Sum(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
+            var usedDays = usedRequests.Sum(r => (r.EndDate - r.StartDate).TotalDays + 1);
 
-            if (usedDays + businessDays > allocation.NumberOfDays)
+            if (usedDays + businessDays > Math.Floor(allocation.NumberOfDays))
             {
-                ModelState.AddModelError("", $"Insufficient leave balance. Available: {allocation.NumberOfDays - usedDays} days. Requested: {businessDays} days.");
+                ModelState.AddModelError("", $"Insufficient leave balance. Available: {(int)Math.Floor(allocation.NumberOfDays - usedDays)} days. Requested: {businessDays} days.");
                 return View(model);
             }
         }
@@ -473,6 +473,7 @@ public class EmployeeController : Controller
     }
 
     // ─── PROFILE ────────────────────────────────────────────
+    [HttpGet]
     public async Task<IActionResult> Profile()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -481,7 +482,56 @@ public class EmployeeController : Controller
         await _context.Entry(user).Reference(u => u.Department).LoadAsync();
         await _context.Entry(user).Reference(u => u.Manager).LoadAsync();
 
-        return View(user);
+        var model = new UserProfileViewModel
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            EmployeeCode = user.EmployeeCode,
+            Phone = user.Phone,
+            Shift = user.Shift,
+            Gender = user.Gender,
+            DateOfBirth = user.DateOfBirth,
+            Address = user.Address,
+            DateJoined = user.DateJoined,
+            DepartmentName = user.Department?.Name,
+            ManagerName = user.Manager != null ? $"{user.Manager.FirstName} {user.Manager.LastName}" : "No Manager Assigned"
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(UserProfileViewModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
+        if (ModelState.IsValid)
+        {
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Phone = model.Phone;
+            user.Shift = model.Shift;
+            user.Gender = model.Gender;
+            user.DateOfBirth = model.DateOfBirth;
+            user.Address = model.Address;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Profile updated successfully.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+        }
+
+        return View(model);
     }
 
     // ─── HELPERS ────────────────────────────────────────────
@@ -501,7 +551,7 @@ public class EmployeeController : Controller
         foreach (var type in leaveTypes)
         {
              var typeLeaves = allApprovedLeaves.Where(l => l.LeaveTypeId == type.Id).ToList();
-             int used = typeLeaves.Sum(l => CountBusinessDays(l.StartDate, l.EndDate) - holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate));
+             double used = typeLeaves.Sum(l => (double)CountBusinessDays(l.StartDate, l.EndDate) - holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate));
              
              var alloc = allocations.FirstOrDefault(a => a.LeaveTypeId == type.Id);
              
@@ -520,7 +570,7 @@ public class EmployeeController : Controller
                        LeaveTypeName = type.Name,
                        LeaveTypeCode = type.Code,
                        Allocated = 0,
-                       Used = used
+                       Used = (int)Math.Floor(used)
                   });
              }
              else if (alloc != null)
@@ -528,8 +578,8 @@ public class EmployeeController : Controller
                   balances.Add(new LeaveBalanceViewModel {
                        LeaveTypeName = type.Name,
                        LeaveTypeCode = type.Code,
-                       Allocated = alloc.NumberOfDays,
-                       Used = used
+                       Allocated = (int)Math.Floor(alloc.NumberOfDays),
+                       Used = (int)Math.Floor(used)
                   });
              }
         }

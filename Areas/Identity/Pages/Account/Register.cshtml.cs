@@ -29,21 +29,21 @@ namespace LMS.Areas.Identity.Pages.Account
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
+        private readonly LMS.Services.IEmailService _emailService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            LMS.Services.IEmailService emailService)
         {
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -110,18 +110,11 @@ namespace LMS.Areas.Identity.Pages.Account
             [Display(Name = "Employee Code (Optional)")]
             public string EmployeeCode { get; set; }
 
-            [Required]
-            [Phone]
-            [Display(Name = "Phone")]
-            public string Phone { get; set; }
 
-            [Required]
-            [Display(Name = "Shift")]
-            public string Shift { get; set; }
 
-            [Required]
-            [Display(Name = "Gender")]
-            public string Gender { get; set; }
+
+
+
 
             [Required]
             [DataType(DataType.Date)]
@@ -147,9 +140,6 @@ namespace LMS.Areas.Identity.Pages.Account
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
                 user.EmployeeCode = Input.EmployeeCode ?? string.Empty;
-                user.Phone = Input.Phone;
-                user.Shift = Input.Shift;
-                user.Gender = Input.Gender;
                 user.DateJoined = Input.DateJoined;
                 user.IsActive = false;
                 user.Status = UserStatus.Pending;
@@ -171,8 +161,27 @@ namespace LMS.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    // 1) Send email to the new user
+                    await _emailService.SendEmailAsync(Input.Email, "Registration Received - Awaiting Approval",
+                        $"Hello {Input.FirstName},<br><br>Your registration request has been received. " +
+                        $"Your account is currently in <b>Pending</b> status.<br>" +
+                        $"You will receive an email once the administrator approves your account.<br><br>Thank you.");
+
+                    // 2) Send email to the Admin
+                    string adminEmailSubject = "New User Registration - Action Required";
+                    string adminEmailBody = $@"
+                        <h3>New User Registration Request</h3>
+                        <p>A new user has registered and is pending approval.</p>
+                        <ul>
+                            <li><b>Name:</b> {Input.FirstName} {Input.LastName}</li>
+                            <li><b>Email:</b> {Input.Email}</li>
+                            <li><b>Employee Code:</b> {Input.EmployeeCode}</li>
+                            <li><b>Date Joined:</b> {Input.DateJoined.ToString("dd MMM yyyy")}</li>
+                        </ul>
+                        <p>Please log in to the admin dashboard to review and approve/reject this request.</p>
+                    ";
+                    
+                    await _emailService.SendEmailToAdminAsync(adminEmailSubject, adminEmailBody);
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

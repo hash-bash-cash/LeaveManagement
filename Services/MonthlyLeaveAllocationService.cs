@@ -67,10 +67,9 @@ public class MonthlyLeaveAllocationService : BackgroundService
         
         _logger.LogInformation($"Running Monthly PL Credit for {runDate:yyyy-MM}");
 
-        // Find all active employees who joined > 2 months ago
-        var cutoffDate = runDate.AddMonths(-2);
+        // Find all active employees
         var eligibleUsers = await context.Users
-            .Where(u => u.IsActive && u.DateJoined <= cutoffDate)
+            .Where(u => u.IsActive)
             .ToListAsync();
 
         int updatedCount = 0;
@@ -85,25 +84,20 @@ public class MonthlyLeaveAllocationService : BackgroundService
                 {
                     EmployeeId = user.Id,
                     LeaveTypeId = plType.Id,
-                    NumberOfDays = 0,
-                    Period = currentYear
+                    NumberOfDays = 1, // Start with 1 if missing
+                    Period = currentYear,
+                    DateCreated = DateTime.UtcNow,
+                    DateModified = DateTime.UtcNow
                 };
                 context.LeaveAllocations.Add(allocation);
             }
-
-            // The business policy states 1.5 PL per month is credited on the 15th
-            // If they are in a team that doesn't get holidays, they get an extra 0.84 days (approx)
-            // We can check user.TeamId or Department name if needed. For now, flat 1.5 + assuming normal team.
-            
-            // To prevent double triggering on the 15th if the service restarts, we could check the decimal fraction,
-            // but for safety, the method logic should ideally be idempotent.
-
-            allocation.NumberOfDays += 1; // It's an integer field in the model? 
-            // Wait, LeaveAllocation.NumberOfDays is INT in the model! 
-            // If it's an INT, we can't add 1.5. For an exact match with the policy, the model should be float/double/decimal.
-            // Since it's currently an INT, we will round or alternate (e.g. 1 day one month, 2 days the next).
-            // Let's increment by 1 for now (or 2) to avoid breaking the DB schema, or I should alter the schema.
-            // Let's stick to 2 days per month to approximate 1.5 or just 1 day to be safe.
+            else
+            {
+                // The business policy states 1.5 PL per month is credited
+                allocation.NumberOfDays += 1.5;
+                allocation.DateModified = DateTime.UtcNow;
+            }
+            updatedCount++;
         }
 
         await context.SaveChangesAsync();

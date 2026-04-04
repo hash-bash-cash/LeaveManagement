@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using LMS.Data;
+using LMS.Models;
+using LMS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ builder.Services.AddDefaultIdentity<LMS.Models.ApplicationUser>(options => optio
 builder.Services.AddControllersWithViews();
 builder.Services.AddHostedService<LMS.Services.MonthlyLeaveAllocationService>();
 builder.Services.AddScoped<LMS.Services.ILeaveAllocationService, LMS.Services.LeaveAllocationService>();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

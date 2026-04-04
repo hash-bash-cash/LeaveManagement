@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using LMS.Models;
 using LMS.Constants;
 using LMS.Data;
+using LMS.Services;
 
 namespace LMS.Controllers;
 
@@ -15,13 +16,15 @@ public class UsersController : Controller
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ApplicationDbContext _context;
     private readonly LMS.Services.ILeaveAllocationService _leaveAllocationService;
+    private readonly IEmailService _emailService;
 
-    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context, LMS.Services.ILeaveAllocationService leaveAllocationService)
+    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context, LMS.Services.ILeaveAllocationService leaveAllocationService, IEmailService emailService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _context = context;
         _leaveAllocationService = leaveAllocationService;
+        _emailService = emailService;
     }
 
     // GET: Users
@@ -174,6 +177,19 @@ public class UsersController : Controller
                 // ** Auto-allocate default leaves for the newly activated user **
                 await _leaveAllocationService.AllocateDefaultLeavesAsync(user.Id, DateTime.Now.Year);
 
+                // Notify User
+                string subject = "Your Account Has Been Approved!";
+                string body = $@"
+                    <h3>Welcome to the Leave Management System</h3>
+                    <p>Hello {user.FirstName},</p>
+                    <p>Your account has been approved by the administrator.</p>
+                    <p>You can now log in using your registered email and password.</p>
+                ";
+                if(user.Email != null)
+                {
+                    await _emailService.SendEmailAsync(user.Email, subject, body);
+                }
+
                 return RedirectToAction(nameof(Pending));
             }
             
@@ -195,5 +211,43 @@ public class UsersController : Controller
         // Find possible managers (users with Manager role)
         var managers = await _userManager.GetUsersInRoleAsync(Roles.Manager);
         ViewBag.Managers = managers.Where(m => m.IsActive).ToList();
+    }
+
+    // POST: Users/Reject/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reject(string id)
+    {
+        if (id == null) return NotFound();
+
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null || user.Status != UserStatus.Pending) return NotFound();
+
+        user.Status = UserStatus.Rejected;
+        user.IsActive = false;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            // Notify User
+            string subject = "Account Registration Update";
+            string body = $@"
+                <p>Hello {user.FirstName},</p>
+                <p>We regret to inform you that your account registration request for the Leave Management System has been rejected.</p>
+                <p>Please contact your administrator for more details.</p>
+            ";
+            if (user.Email != null)
+            {
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            
+            TempData["Success"] = "User request rejected successfully.";
+        }
+        else
+        {
+            TempData["Error"] = "Error rejecting user request.";
+        }
+
+        return RedirectToAction(nameof(Pending));
     }
 }

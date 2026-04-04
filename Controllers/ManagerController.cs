@@ -117,7 +117,7 @@ public class ManagerController : Controller
             .Where(c => c.EmployeeId == leave.RequestingEmployeeId && !c.IsUsed)
             .ToListAsync();
 
-        int available = 0;
+        double available = 0;
         if (leave.LeaveType != null)
         {
             if (leave.LeaveType.Code == "CO") available = cos.Count;
@@ -128,16 +128,16 @@ public class ManagerController : Controller
                 if (alloc != null)
                 {
                     var usedLeaves = allLeaves.Where(l => l.LeaveTypeId == leave.LeaveTypeId).ToList();
-                    int usedDays = 0;
+                    double usedDays = 0;
                     foreach(var l in usedLeaves)
                     {
-                        var days = 0;
+                        double days = 0;
                         for (var d = l.StartDate; d <= l.EndDate; d = d.AddDays(1))
                             if (d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday) days++;
                         days -= _context.Holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate);
                         usedDays += days;
                     }
-                    available = alloc.NumberOfDays - usedDays;
+                    available = Math.Floor(alloc.NumberOfDays - usedDays);
                 }
             }
         }
@@ -153,7 +153,7 @@ public class ManagerController : Controller
             TotalDays = (int)(leave.EndDate - leave.StartDate).TotalDays + 1,
             Reason = leave.RequestComments,
             DateRequested = leave.DateRequested,
-            AvailableBalance = available,
+            AvailableBalance = (int)available,
             AttachmentPath = leave.AttachmentPath,
             DateOfDeath = leave.DateOfDeath,
             DeceasedName = leave.DeceasedName,
@@ -325,8 +325,9 @@ public class ManagerController : Controller
             var balances = allocations.Select(a => new LeaveBalanceViewModel
             {
                 LeaveTypeName = a.LeaveType!.Name,
-                Allocated = a.NumberOfDays,
-                Used = history.Where(l => l.LeaveTypeId == a.LeaveTypeId && l.Approved == true && !l.Cancelled).Sum(l => (int)(l.EndDate - l.StartDate).TotalDays + 1)
+                LeaveTypeCode = a.LeaveType!.Code,
+                Allocated = (int)Math.Floor(a.NumberOfDays),
+                Used = (int)Math.Floor(history.Where(l => l.LeaveTypeId == a.LeaveTypeId && l.Approved == true && !l.Cancelled).Sum(l => (l.EndDate - l.StartDate).TotalDays + 1))
             }).ToList();
 
             result.Add(new TeamMemberBalanceViewModel
@@ -406,7 +407,8 @@ public class ManagerController : Controller
             var balances = allocations.Select(a => new LeaveBalanceViewModel
             {
                 LeaveTypeName = a.LeaveType!.Name,
-                Allocated = a.NumberOfDays,
+                LeaveTypeCode = a.LeaveType!.Code,
+                Allocated = (int)Math.Floor(a.NumberOfDays),
                 Used = usedLeaves.Count(l => l.LeaveTypeId == a.LeaveTypeId)
             }).ToList();
 
@@ -480,12 +482,12 @@ public class ManagerController : Controller
         {
             UsageByType = approvedLeaves
                 .GroupBy(l => l.LeaveType!.Name)
-                .Select(g => new LeaveTypeUsage { TypeName = g.Key, TotalDays = g.Sum(l => (int)(l.EndDate - l.StartDate).TotalDays + 1) })
+                .Select(g => new LeaveTypeUsage { TypeName = g.Key, TotalDays = (int)Math.Floor(g.Sum(l => (l.EndDate - l.StartDate).TotalDays + 1)) })
                 .ToList(),
 
             TopUsers = approvedLeaves
                 .GroupBy(l => $"{l.RequestingEmployee!.FirstName} {l.RequestingEmployee!.LastName}")
-                .Select(g => new EmployeeUsage { Name = g.Key, TotalDays = g.Sum(l => (int)(l.EndDate - l.StartDate).TotalDays + 1) })
+                .Select(g => new EmployeeUsage { Name = g.Key, TotalDays = (int)Math.Floor(g.Sum(l => (l.EndDate - l.StartDate).TotalDays + 1)) })
                 .OrderByDescending(u => u.TotalDays)
                 .Take(5)
                 .ToList(),

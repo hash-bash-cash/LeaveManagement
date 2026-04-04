@@ -50,3 +50,48 @@ public class EmployeeDashboardViewModel
     public int PendingRequests { get; set; }
     public int ApprovedThisYear { get; set; }
 }
+
+public class UserProfileViewModel
+{
+    [Required]
+    [Display(Name = "First Name")]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Last Name")]
+    public string LastName { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Employee Code")]
+    public string EmployeeCode { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Phone")]
+    public string Phone { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Shift")]
+    public string Shift { get; set; } = string.Empty;
+
+    [Required]
+    [Display(Name = "Gender")]
+    public string Gender { get; set; } = string.Empty;
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Date of Birth")]
+    public DateTime? DateOfBirth { get; set; }
+
+    [Required]
+    [Display(Name = "Address")]
+    public string Address { get; set; } = string.Empty;
+
+    [Display(Name = "Joining Date")]
+    public DateTime DateJoined { get; set; }
+
+    public string? DepartmentName { get; set; }
+    public string? ManagerName { get; set; }
+}

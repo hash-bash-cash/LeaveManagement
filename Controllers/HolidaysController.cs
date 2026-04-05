@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using LMS.Models;
 using LMS.Data;
 using LMS.Constants;
-
+using ClosedXML.Excel;
 namespace LMS.Controllers;
 
 [Authorize]
@@ -62,6 +62,101 @@ public class HolidaysController : Controller
         ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", holiday.DepartmentId);
         ViewData["EmployeeId"] = new SelectList(_context.Users.Where(u => u.IsActive), "Id", "Email", holiday.EmployeeId);
         return View(holiday);
+    }
+
+    // GET: Holidays/Import
+    [Authorize(Roles = Roles.Admin)]
+    public IActionResult Import()
+    {
+        ViewData["Departments"] = _context.Departments.ToList();
+        return View();
+    }
+
+    // POST: Holidays/Import
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> Import(IFormFile excelFile, List<int> departmentIds)
+    {
+        if (excelFile == null || excelFile.Length == 0)
+        {
+            ModelState.AddModelError("", "Please upload a valid Excel file.");
+            ViewData["Departments"] = _context.Departments.ToList();
+            return View();
+        }
+
+        try
+        {
+            using var stream = new MemoryStream();
+            await excelFile.CopyToAsync(stream);
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.FirstOrDefault();
+            if (worksheet == null) throw new Exception("No worksheets found in the Excel file.");
+
+            var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1); // Skip header row
+            if (rows != null)
+            {
+                foreach (var row in rows)
+                {
+                    var name = row.Cell(1).GetValue<string>();
+                    
+                    DateTime date;
+                    if (!row.Cell(2).TryGetValue<DateTime>(out date))
+                    {
+                        if (!DateTime.TryParse(row.Cell(2).GetString(), out date))
+                        {
+                            continue; // Skip if date is invalid
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        string recStr = row.Cell(3).GetString()?.ToLower() ?? "";
+                        string floatStr = row.Cell(4).GetString()?.ToLower() ?? "";
+                        
+                        bool isRecurring = recStr == "yes" || recStr == "true" || recStr == "1";
+                        bool isFloating = floatStr == "yes" || floatStr == "true" || floatStr == "1";
+
+                        if (departmentIds != null && departmentIds.Any())
+                        {
+                            foreach (var deptId in departmentIds)
+                            {
+                                _context.Holidays.Add(new Holiday
+                                {
+                                    Name = name,
+                                    Date = date,
+                                    IsRecurringYearly = isRecurring,
+                                    IsFloating = isFloating,
+                                    DepartmentId = deptId
+                                });
+                            }
+                        }
+                        else
+                        {
+                            // Global holiday
+                            _context.Holidays.Add(new Holiday
+                            {
+                                Name = name,
+                                Date = date,
+                                IsRecurringYearly = isRecurring,
+                                IsFloating = isFloating,
+                                DepartmentId = null
+                            });
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Holidays imported successfully.";
+                return RedirectToAction(nameof(Manage));
+            }
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "Error processing file. Please ensure it has the correct format. Details: " + ex.Message);
+        }
+
+        ViewData["Departments"] = _context.Departments.ToList();
+        return View();
     }
 
     // GET: Holidays/Edit/5

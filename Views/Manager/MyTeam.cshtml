@@ -83,14 +83,32 @@
                                 <div class="row g-3 mb-4">
                                     @foreach (var devB in m.Balances)
                                     {
+                                        bool isGeneral = devB.LeaveTypeName.Contains("Paid", StringComparison.OrdinalIgnoreCase) || 
+                                                         devB.LeaveTypeName.Contains("Casual", StringComparison.OrdinalIgnoreCase) || 
+                                                         devB.LeaveTypeName.Contains("Sick", StringComparison.OrdinalIgnoreCase);
+                                                         
+                                        if (!isGeneral && devB.Used == 0) continue;
+                                        
+                                        string leaveColor = isGeneral ? "var(--personal-accent)" : "#f59e0b"; // Highlight special leaves
+                                        string bgClass = isGeneral ? "bg-white" : "bg-warning-subtle border-warning-subtle";
+
                                         <div class="col-md-4">
-                                            <div class="p-3 border rounded-4 bg-white shadow-sm h-100">
-                                                <div class="small fw-bold text-muted mb-2 text-uppercase" style="font-size: 11px;">@devB.LeaveTypeName</div>
-                                                <div class="h3 mb-1 fw-bold">@devB.Remaining</div>
-                                                <div class="progress" style="height: 6px; border-radius: 10px;">
-                                                    <div class="progress-bar" role="progressbar" style="width: @(devB.Allocated > 0 ? (devB.Used * 100 / devB.Allocated) : 0)%; background: var(--accent);"></div>
+                                            <div class="p-3 border rounded-4 @bgClass shadow-sm h-100" style="transition: transform 0.2s;">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div class="small fw-bold text-muted text-uppercase" style="font-size: 11px;">@devB.LeaveTypeName</div>
+                                                    @if(!isGeneral)
+                                                    {
+                                                        <i class="fa-solid fa-star" style="color: @leaveColor; font-size: 12px;"></i>
+                                                    }
                                                 </div>
-                                                <div class="text-muted mt-2" style="font-size: 10px;">Taken: @devB.Used / Total: @devB.Allocated</div>
+                                                <div class="h3 mb-2 fw-bold" style="color: @leaveColor;">@devB.Remaining <span style="font-size: 14px; font-weight: normal; color: #888;">left</span></div>
+                                                <div class="progress" style="height: 6px; border-radius: 10px; background-color: rgba(0,0,0,0.05);">
+                                                    <div class="progress-bar" role="progressbar" style="width: @(devB.Allocated > 0 ? (devB.Used * 100 / devB.Allocated) : (devB.Used > 0 ? 100 : 0))%; background: @leaveColor;"></div>
+                                                </div>
+                                                <div class="text-muted mt-2 d-flex justify-content-between" style="font-size: 11px;">
+                                                    <span>Taken: <strong>@devB.Used</strong></span>
+                                                    <span>Total: <strong>@devB.Allocated</strong></span>
+                                                </div>
                                             </div>
                                         </div>
                                     }

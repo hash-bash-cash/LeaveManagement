@@ -11,6 +11,7 @@ public static class DbSeeder
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
         var roles = new[] { Roles.Admin, Roles.Manager, Roles.Employee };
         foreach (var role in roles)
@@ -21,8 +22,10 @@ public static class DbSeeder
             }
         }
 
-        var adminEmail = "admin@lms.com";
+        var adminEmail = configuration["EmailSettings:AdminEmail"] ?? "admin@lms.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        
+        var adminPassword = configuration["EmailSettings:AdminPassword"] ?? "Admin@123";
         
         if (adminUser == null)
         {
@@ -38,7 +41,7 @@ public static class DbSeeder
                 Status = UserStatus.Active
             };
             
-            var result = await userManager.CreateAsync(newAdmin, "Admin@123");
+            var result = await userManager.CreateAsync(newAdmin, adminPassword);
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(newAdmin, Roles.Admin);

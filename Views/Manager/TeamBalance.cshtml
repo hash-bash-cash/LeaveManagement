@@ -34,20 +34,28 @@ else
                 <div class="row g-3">
                 @foreach (var b in member.Balances)
                 {
-                    var pct = b.Allocated > 0 ? (b.Used * 100 / b.Allocated) : 0;
-                    var barColor = pct >= 80 ? "#dc3545" : pct >= 50 ? "#fd7e14" : "var(--accent)";
+                    bool isGeneral = b.LeaveTypeName.Contains("Paid", StringComparison.OrdinalIgnoreCase) || 
+                                     b.LeaveTypeName.Contains("Casual", StringComparison.OrdinalIgnoreCase) || 
+                                     b.LeaveTypeName.Contains("Sick", StringComparison.OrdinalIgnoreCase);
+
+                    if (!isGeneral && b.Used == 0) continue;
+
+                    var pct = b.Allocated > 0 ? (b.Used * 100 / b.Allocated) : (b.Used > 0 ? 100 : 0);
+                    var barColor = pct >= 80 ? "#dc3545" : pct >= 50 ? "#fd7e14" : (isGeneral ? "var(--accent)" : "#f59e0b");
+                    string bgClass = isGeneral ? "bg-white" : "bg-warning-subtle border-warning-subtle";
+
                     <div class="col-md-4">
-                        <div class="p-3 border rounded">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="small fw-semibold">@b.LeaveTypeName</span>
-                                <span class="small text-muted">@b.Used / @b.Allocated</span>
+                        <div class="p-3 border rounded @bgClass shadow-sm" style="transition: transform 0.2s;">
+                            <div class="d-flex justify-content-between mb-1 align-items-center">
+                                <span class="small fw-bold text-uppercase" style="font-size: 11px;">@b.LeaveTypeName</span>
+                                @if(!isGeneral) { <i class="fa-solid fa-star" style="color: @barColor; font-size: 12px;"></i> }
                             </div>
                             <div class="progress" style="height:8px;margin-bottom:6px">
                                 <div class="progress-bar" style="width:@pct%;background:@barColor"></div>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="small text-muted">Used: @b.Used</span>
-                                <span class="small fw-semibold" style="color:@barColor">@b.Remaining left</span>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="small text-muted">Used: <strong>@b.Used</strong> / @b.Allocated</span>
+                                <span class="small fw-bold" style="color:@barColor">@b.Remaining left</span>
                             </div>
                         </div>
                     </div>

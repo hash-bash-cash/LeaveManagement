@@ -111,6 +111,23 @@
                 </div>
             </div>
 
+            <!-- Floating Holiday Section -->
+            <div id="floatingHolidaySection" style="display:none" class="col-md-12">
+                <div class="card bg-soft-warning border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-warning-emphasis"><i class="fa-solid fa-star me-2"></i>Select Floating Holiday</h6>
+                        <select id="floatingHolidaySelect" class="form-select border-warning">
+                            <option value="">— Select Available Date —</option>
+                            @foreach (var h in Model.AvailableFloatingHolidays)
+                            {
+                                <option value="@h.Date.ToString("yyyy-MM-dd")">@h.Name - @h.Date.ToString("dd MMM")</option>
+                            }
+                        </select>
+                        <p class="mb-0 mt-2 small text-muted"><i class="fa-solid fa-info-circle me-1"></i> Selecting a holiday will automatically set the start and end dates.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-md-12">
                 <label class="form-label fw-semibold">Supporting Document <span id="docRequired" class="text-danger" style="display:none">*</span></label>
                 <input asp-for="Attachment" class="form-control" type="file" id="attachmentInput" />
@@ -173,6 +190,17 @@ function updateUiForLeaveType() {
             document.getElementById('DeceasedName').required = false;
             document.getElementById('blRelation').required = false;
             document.getElementById('blHint').style.display = 'none';
+        }
+
+        // Floating Holiday Logic (FD)
+        if (type.code === 'FD') {
+            document.getElementById('floatingHolidaySection').style.display = 'block';
+            document.getElementById('startDate').readOnly = true;
+            document.getElementById('endDate').readOnly = true;
+        } else {
+            document.getElementById('floatingHolidaySection').style.display = 'none';
+            document.getElementById('startDate').readOnly = false;
+            document.getElementById('endDate').readOnly = false;
         }
 
         // Supporting Document Logic (SL > 2 days, ML require it. BL no longer needs it)
@@ -238,8 +266,22 @@ document.getElementById('endDate').addEventListener('change', function(){
     updateUiForLeaveType();
 });
 
+document.getElementById('floatingHolidaySelect').addEventListener('change', function() {
+    const date = this.value;
+    if (date) {
+        document.getElementById('startDate').value = date;
+        document.getElementById('endDate').value = date;
+        updateDays();
+        updateUiForLeaveType();
+    }
+});
+
 // Initial call
 updateUiForLeaveType();
 updateDays();
 </script>
+
+<style>
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+</style>
 }

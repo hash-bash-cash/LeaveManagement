@@ -11,4 +11,9 @@ obj/
 *.suo
 
 # Logs
+appsettings.Development.json
+bin/
+obj/
+*.user
+*.db
 *.log

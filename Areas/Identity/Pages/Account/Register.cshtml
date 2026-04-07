@@ -64,37 +64,6 @@
             </div>
             <div class="col-md-6">
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.Phone" class="form-control" aria-required="true" placeholder="Phone" />
-                    <label asp-for="Input.Phone">Phone Number</label>
-                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-floating mb-3">
-                    <select asp-for="Input.Shift" class="form-select">
-                        <option value="">Select Shift...</option>
-                        <option value="Morning">Morning</option>
-                        <option value="Evening">Evening</option>
-                        <option value="Night">Night</option>
-                    </select>
-                    <label asp-for="Input.Shift">Work Shift</label>
-                    <span asp-validation-for="Input.Shift" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-floating mb-3">
-                    <select asp-for="Input.Gender" class="form-select">
-                        <option value="">Select Gender...</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <label asp-for="Input.Gender">Gender</label>
-                    <span asp-validation-for="Input.Gender" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-floating mb-3">
                     <input asp-for="Input.DateJoined" class="form-control" type="date" aria-required="true" />
                     <label asp-for="Input.DateJoined">Joining Date</label>
                     <span asp-validation-for="Input.DateJoined" class="text-danger"></span>

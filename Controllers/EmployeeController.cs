@@ -51,10 +51,22 @@ public class EmployeeController : Controller
     [HttpGet]
     public async Task<IActionResult> Apply()
     {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
         var leaveTypes = await _context.LeaveTypes
             .Where(lt => lt.Code != "WO" && lt.Code != "HD")
             .ToListAsync();
-        var model = new ApplyLeaveViewModel { LeaveTypes = leaveTypes };
+
+        var floatingHolidays = await _context.Holidays
+            .Where(h => h.IsFloating && ((h.Date.Year == DateTime.Now.Year) || h.IsRecurringYearly))
+            .Where(h => (h.DepartmentId == null && h.EmployeeId == null) || (h.DepartmentId == user.DepartmentId) || (h.EmployeeId == user.Id))
+            .ToListAsync();
+
+        var model = new ApplyLeaveViewModel { 
+            LeaveTypes = leaveTypes,
+            AvailableFloatingHolidays = floatingHolidays
+        };
         return View(model);
     }
 
@@ -77,22 +89,23 @@ public class EmployeeController : Controller
         // ── Calculate business days (excluding weekends)
         int businessDays = CountBusinessDays(model.StartDate, model.EndDate);
 
-        // ── Validation: Remove holidays from count
+        // ── Validation: Remove holidays from count (Handling recurring and targeted holidays)
         var holidays = await _context.Holidays
-            .Where(h => h.Date >= model.StartDate && h.Date <= model.EndDate)
+            .Where(h => (h.Date >= model.StartDate && h.Date <= model.EndDate) || (h.IsRecurringYearly && h.Date.Month == model.StartDate.Month && h.Date.Day == model.StartDate.Day))
+            .Where(h => (h.DepartmentId == null && h.EmployeeId == null) || (h.DepartmentId == user.DepartmentId) || (h.EmployeeId == user.Id))
             .ToListAsync();
         businessDays -= holidays.Count;
-
-        if (businessDays <= 0)
-        {
-            ModelState.AddModelError("", "Your selected dates fall entirely on weekends or public holidays.");
-            return View(model);
-        }
 
         var leaveTypeObj = model.LeaveTypes.FirstOrDefault(lt => lt.Id == model.LeaveTypeId);
         if (leaveTypeObj == null)
         {
             ModelState.AddModelError("", "Invalid leave type.");
+            return View(model);
+        }
+
+        if (businessDays <= 0 && leaveTypeObj.Code != "FD")
+        {
+            ModelState.AddModelError("", "Your selected dates fall entirely on weekends or public holidays.");
             return View(model);
         }
 
@@ -237,12 +250,15 @@ public class EmployeeController : Controller
         // Rule 15: FD
         if (leaveTypeObj.Code == "FD")
         {
-            var isFloatingHoliday = await _context.Holidays.AnyAsync(h => h.Date == model.StartDate.Date && h.IsFloating);
+            var isFloatingHoliday = holidays.Any(h => h.IsFloating && 
+                (h.Date.Date == model.StartDate.Date || (h.IsRecurringYearly && h.Date.Month == model.StartDate.Month && h.Date.Day == model.StartDate.Day)));
+            
             if (!isFloatingHoliday)
             {
                  ModelState.AddModelError("", "Floating Holiday can only be applied on designated Floating Holiday dates.");
                  return View(model);
             }
+            businessDays = 1; // FD is always 1 day
         }
 
         // Rule 12: Attendance
@@ -291,11 +307,11 @@ public class EmployeeController : Controller
                          && !r.Cancelled)
                 .ToListAsync();
 
-            var usedDays = usedRequests.Sum(r => (int)(r.EndDate - r.StartDate).TotalDays + 1);
+            var usedDays = usedRequests.Sum(r => (r.EndDate - r.StartDate).TotalDays + 1);
 
-            if (usedDays + businessDays > allocation.NumberOfDays)
+            if (usedDays + businessDays > Math.Floor(allocation.NumberOfDays))
             {
-                ModelState.AddModelError("", $"Insufficient leave balance. Available: {allocation.NumberOfDays - usedDays} days. Requested: {businessDays} days.");
+                ModelState.AddModelError("", $"Insufficient leave balance. Available: {(int)Math.Floor(allocation.NumberOfDays - usedDays)} days. Requested: {businessDays} days.");
                 return View(model);
             }
         }
@@ -457,6 +473,7 @@ public class EmployeeController : Controller
     }
 
     // ─── PROFILE ────────────────────────────────────────────
+    [HttpGet]
     public async Task<IActionResult> Profile()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -465,7 +482,56 @@ public class EmployeeController : Controller
         await _context.Entry(user).Reference(u => u.Department).LoadAsync();
         await _context.Entry(user).Reference(u => u.Manager).LoadAsync();
 
-        return View(user);
+        var model = new UserProfileViewModel
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            EmployeeCode = user.EmployeeCode,
+            Phone = user.Phone,
+            Shift = user.Shift,
+            Gender = user.Gender,
+            DateOfBirth = user.DateOfBirth,
+            Address = user.Address,
+            DateJoined = user.DateJoined,
+            DepartmentName = user.Department?.Name,
+            ManagerName = user.Manager != null ? $"{user.Manager.FirstName} {user.Manager.LastName}" : "No Manager Assigned"
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(UserProfileViewModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
+        if (ModelState.IsValid)
+        {
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Phone = model.Phone;
+            user.Shift = model.Shift;
+            user.Gender = model.Gender;
+            user.DateOfBirth = model.DateOfBirth;
+            user.Address = model.Address;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Profile updated successfully.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+        }
+
+        return View(model);
     }
 
     [HttpPost]
@@ -511,7 +577,7 @@ public class EmployeeController : Controller
         foreach (var type in leaveTypes)
         {
              var typeLeaves = allApprovedLeaves.Where(l => l.LeaveTypeId == type.Id).ToList();
-             int used = typeLeaves.Sum(l => CountBusinessDays(l.StartDate, l.EndDate) - holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate));
+             double used = typeLeaves.Sum(l => (double)CountBusinessDays(l.StartDate, l.EndDate) - holidays.Count(h => h.Date >= l.StartDate && h.Date <= l.EndDate));
              
              var alloc = allocations.FirstOrDefault(a => a.LeaveTypeId == type.Id);
              
@@ -530,7 +596,7 @@ public class EmployeeController : Controller
                        LeaveTypeName = type.Name,
                        LeaveTypeCode = type.Code,
                        Allocated = 0,
-                       Used = used
+                       Used = (int)Math.Floor(used)
                   });
              }
              else if (alloc != null)
@@ -538,8 +604,8 @@ public class EmployeeController : Controller
                   balances.Add(new LeaveBalanceViewModel {
                        LeaveTypeName = type.Name,
                        LeaveTypeCode = type.Code,
-                       Allocated = alloc.NumberOfDays,
-                       Used = used
+                       Allocated = (int)Math.Floor(alloc.NumberOfDays),
+                       Used = (int)Math.Floor(used)
                   });
              }
         }

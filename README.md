@@ -61,3 +61,30 @@ To access the system as an administrator:
    dotnet run
    ```
 5. Navigate to `http://localhost:5032` (or the port specified in your console).
+
+
+
+
+
+## 🔐 Setup User Secrets
+
+This project uses ASP.NET Core User Secrets for sensitive data.
+
+### Step 1: Initialize secrets
+
+```bash
+dotnet user-secrets init
+```
+
+### Step 2: Add required secrets
+
+```bash
+dotnet user-secrets set "EmailSettings:Password" "your-email-app-password" 
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-db-connection-string"
+```
+
+### Step 3: Run the project
+
+```bash
+dotnet run
+```

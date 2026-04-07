@@ -31,6 +31,35 @@ public class AdminController : Controller
         return View(user);
     }
 
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+        var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+        if (!changePasswordResult.Succeeded)
+        {
+            foreach (var error in changePasswordResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        TempData["Success"] = "Your password has been changed.";
+        return RedirectToAction(nameof(Profile));
+    }
+
     // ─── DASHBOARD ──────────────────────────────────────────────────────────
     public async Task<IActionResult> Dashboard()
     {
@@ -289,104 +318,7 @@ public class AdminController : Controller
         return View(leaves);
     }
 
-    // ─── HOLIDAY CALENDAR ───────────────────────────────────────────────────
-    public async Task<IActionResult> HolidayCalendar()
-    {
-        var holidays = await _context.Holidays.OrderBy(h => h.Date).ToListAsync();
-        return View(holidays);
-    }
 
-    [HttpGet]
-    public IActionResult AddHoliday() => View(new Holiday());
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddHoliday(Holiday model)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Holidays.Add(model);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Holiday added successfully.";
-            return RedirectToAction(nameof(HolidayCalendar));
-        }
-        return View(model);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> EditHoliday(int id)
-    {
-        var holiday = await _context.Holidays.FindAsync(id);
-        if (holiday == null) return NotFound();
-        return View(holiday);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditHoliday(int id, Holiday model)
-    {
-        if (id != model.Id) return NotFound();
-        if (ModelState.IsValid)
-        {
-            _context.Update(model);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Holiday updated successfully.";
-            return RedirectToAction(nameof(HolidayCalendar));
-        }
-        return View(model);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteHoliday(int id)
-    {
-        var holiday = await _context.Holidays.FindAsync(id);
-        if (holiday != null)
-        {
-            _context.Holidays.Remove(holiday);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Holiday deleted.";
-        }
-        return RedirectToAction(nameof(HolidayCalendar));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ImportHolidays(IFormFile file)
-    {
-        if (file == null || file.Length == 0)
-        {
-            TempData["Error"] = "Please upload a valid CSV file.";
-            return RedirectToAction(nameof(HolidayCalendar));
-        }
-
-        int added = 0;
-        int errors = 0;
-
-        using var reader = new System.IO.StreamReader(file.OpenReadStream());
-        string? line;
-        bool firstLine = true;
-        while ((line = await reader.ReadLineAsync()) != null)
-        {
-            if (firstLine) { firstLine = false; continue; } // skip header
-            var parts = line.Split(',');
-            if (parts.Length < 2) { errors++; continue; }
-
-            var name = parts[0].Trim().Trim('"');
-            if (DateTime.TryParse(parts[1].Trim().Trim('"'), out var date))
-            {
-                bool recurring = parts.Length > 2 && parts[2].Trim().ToLower() == "true";
-                _context.Holidays.Add(new Holiday { Name = name, Date = date, IsRecurringYearly = recurring });
-                added++;
-            }
-            else { errors++; }
-        }
-
-        if (added > 0) await _context.SaveChangesAsync();
-
-        TempData["Success"] = $"Imported {added} holidays. {(errors > 0 ? $"{errors} rows skipped." : "")}";
-        return RedirectToAction(nameof(HolidayCalendar));
-    }
 
     // ─── LEAVE STRUCTURE ────────────────────────────────────────────────────
     public async Task<IActionResult> LeaveStructure()

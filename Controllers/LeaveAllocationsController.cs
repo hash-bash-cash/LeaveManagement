@@ -25,7 +25,7 @@ public class LeaveAllocationsController(ApplicationDbContext context, UserManage
     // POST: LeaveAllocations/SetAllocations
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetAllocations(int leaveTypeId, int numberOfDays)
+    public async Task<IActionResult> SetAllocations(int leaveTypeId, double numberOfDays)
     {
         var leaveType = await context.LeaveTypes.FindAsync(leaveTypeId);
         if (leaveType == null) return NotFound();
@@ -98,7 +98,7 @@ public class LeaveAllocationsController(ApplicationDbContext context, UserManage
     // POST: LeaveAllocations/EditAllocation
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditAllocation(int id, int numberOfDays)
+    public async Task<IActionResult> EditAllocation(int id, double numberOfDays)
     {
         var allocation = await context.LeaveAllocations.FindAsync(id);
         if (allocation == null) return NotFound();

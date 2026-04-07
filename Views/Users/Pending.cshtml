@@ -56,11 +56,10 @@ else
                             </td>
                             <td>
                                 <div class="small fw-medium text-dark"><i class="bi bi-envelope me-2 text-muted"></i>@item.Email</div>
-                                <div class="small text-muted"><i class="bi bi-telephone me-2 text-muted"></i>@(item.Phone ?? "N/A")</div>
+                                <div class="small text-muted text-uppercase fw-bold mt-1">Pending Profile</div>
                             </td>
                             <td>
                                 <div class="badge bg-light text-dark border mb-1">Code: @(item.EmployeeCode ?? "Pending")</div>
-                                <div class="small text-muted">Shift: @(item.Shift ?? "General")</div>
                             </td>
                             <td class="text-end pe-4">
                                 <a asp-action="Review" asp-route-id="@item.Id" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">

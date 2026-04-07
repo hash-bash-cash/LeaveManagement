@@ -1,8 +1,8 @@
-@model LMS.Models.ApplicationUser
+@model LMS.Models.UserProfileViewModel
 @{
     ViewData["Title"] = "My Profile";
     Layout = User.IsInRole("Admin") ? "_AdminLayout" : (User.IsInRole("Manager") ? "_ManagerLayout" : "_EmployeeLayout");
-    var initials = $"{Model.FirstName?.Substring(0,1)}{Model.LastName?.Substring(0,1)}".ToUpper();
+    var initials = $"{Model.FirstName?.Substring(0, 1)}{Model.LastName?.Substring(0, 1)}".ToUpper();
 }
 
 <div class="ds-page-header align-items-center mb-4">
@@ -34,7 +34,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <div class="col-lg-8">
         @if (TempData["Success"] != null)
@@ -119,3 +118,34 @@
         </div>
     </div>
 </div>
+
+<style>
+    .bg-soft-primary {
+        background-color: rgba(79, 172, 254, 0.1);
+    }
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .input-group-text {
+        border-radius: 8px 0 0 8px !important;
+    }
+    .form-control, .form-select {
+        border-radius: 0 8px 8px 0 !important;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border: none;
+        border-radius: 8px;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+        transform: translateY(-1px);
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

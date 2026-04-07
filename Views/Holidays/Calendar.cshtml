@@ -1,0 +1,172 @@
+@{
+    ViewData["Title"] = "Holiday Calendar";
+    // Check role to determine layout
+    if (User.IsInRole("Admin")) Layout = "_AdminLayout";
+    else if (User.IsInRole("Manager")) Layout = "_ManagerLayout";
+    else Layout = "_EmployeeLayout";
+}
+
+@if (User.IsInRole("Admin"))
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Holiday & Leave Calendar</h3>
+        <a asp-action="Manage" class="btn btn-outline-primary border-2 shadow-sm rounded-pill px-4">
+            <i class="bi bi-list-task me-1"></i> Manage Holidays
+        </a>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold mb-0">Holidays & Events</h5>
+                <p class="text-muted small">Upcoming dates for you</p>
+            </div>
+            <div class="card-body px-4" id="holiday-list-sidebar">
+                <div class="d-flex justify-content-center py-5" id="sidebar-loader">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <!-- Dynamic list here -->
+            </div>
+            <div class="card-footer bg-light border-0 p-4 rounded-bottom-4">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="holiday-dot public me-2"></div>
+                    <span class="small text-muted">Public Holiday</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="holiday-dot floating me-2"></div>
+                    <span class="small text-muted">Floating Holiday</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div id="calendar" class="p-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek,listMonth'
+                },
+                themeSystem: 'bootstrap5',
+                events: function(info, successCallback, failureCallback) {
+                    // Fetch holidays from API
+                    fetch(`/Holidays/GetCalendarData?month=${info.start.getMonth() + 1}&year=${info.start.getFullYear()}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Filter data based on relevance (ideally backend should do this, but let's do it here too)
+                            // For simplicity, back-end currently returns all, but we could add filters.
+                            successCallback(data);
+                            updateSidebar(data);
+                        })
+                        .catch(err => failureCallback(err));
+                },
+                eventContent: function(arg) {
+                    let italicEl = document.createElement('div')
+                    italicEl.classList.add('fc-event-title-container');
+                    italicEl.innerHTML = `<div class="fc-event-title fw-semibold text-truncate small ms-1">${arg.event.title}</div>`;
+                    let arrayOfDomNodes = [ italicEl ]
+                    return { domNodes: arrayOfDomNodes }
+                },
+                height: 'calc(100vh - 200px)',
+                dayHeaderClassNames: 'fc-day-header bg-light text-muted uppercase small py-2',
+                dayCellDidMount: function(info) {
+                    // Weekend styling
+                    if (info.date.getDay() === 0 || info.date.getDay() === 6) {
+                        info.el.style.backgroundColor = 'rgba(248, 249, 250, 0.5)';
+                    }
+                }
+            });
+            calendar.render();
+
+            function updateSidebar(events) {
+                const sidebar = document.getElementById('holiday-list-sidebar');
+                const loader = document.getElementById('sidebar-loader');
+                if (loader) loader.remove();
+
+                // Sort upcoming events
+                const now = new Date();
+                const upcoming = events
+                    .filter(e => new Date(e.start) >= now.setHours(0,0,0,0))
+                    .sort((a,b) => new Date(a.start) - new Date(b.start))
+                    .slice(0, 5);
+
+                if (upcoming.length === 0) {
+                    sidebar.innerHTML = '<p class="text-center text-muted py-4">No upcoming holidays</p>';
+                    return;
+                }
+
+                sidebar.innerHTML = upcoming.map(e => {
+                    const date = new Date(e.start);
+                    const day = date.getDate();
+                    const month = date.toLocaleString('default', { month: 'short' });
+                    const isFloating = e.title.includes('Floating');
+                    
+                    return `
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="calendar-date-box me-3 text-center rounded-3 ${isFloating ? 'bg-soft-warning' : 'bg-soft-primary'}">
+                                <div class="small fw-bold date-month text-uppercase">${month}</div>
+                                <div class="h5 mb-0 date-day">${day}</div>
+                            </div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="fw-bold text-dark text-truncate small">${e.title.replace(' (Floating)', '')}</div>
+                                <div class="text-muted tiny">${isFloating ? 'Floating Holiday' : 'Public Holiday'}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --fc-event-bg-color: transparent;
+            --fc-event-border-color: transparent;
+            --fc-today-bg-color: rgba(13, 110, 253, 0.05);
+        }
+
+        .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 700 !important; }
+        .fc-button { border-radius: 20px !important; text-transform: capitalize; font-weight: 500; font-size: 0.875rem; border: none !important; padding: 6px 16px !important; }
+        .fc-button-primary { background-color: #f8f9fa !important; color: #333 !important; }
+        .fc-button-primary:hover { background-color: #e9ecef !important; }
+        .fc-button-active { background-color: #0d6efd !important; color: #fff !important; }
+
+        .fc-day-header { border: none !important; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .fc-daygrid-day-number { font-weight: 600; color: #6c757d; padding: 8px !important; }
+        .fc-day-today .fc-daygrid-day-number { color: #0d6efd; font-size: 1.1rem; }
+        
+        .holiday-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .holiday-dot.public { background-color: #0d6efd; }
+        .holiday-dot.floating { background-color: #ffc107; }
+
+        .calendar-date-box { width: 45px; padding: 5px; min-width: 45px; }
+        .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+        .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); color: #856404; }
+        
+        .tiny { font-size: 0.7rem; }
+        .fc-event { margin-top: 2px !important; border-radius: 4px !important; border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+        .fc-event:hover { transform: scale(1.02); }
+
+        /* Smooth month transition */
+        .fc-view-harness { background: #fff; }
+    </style>
+}

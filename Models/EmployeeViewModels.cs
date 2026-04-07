@@ -30,6 +30,7 @@ public class ApplyLeaveViewModel
     public bool SupportingDocumentRequired { get; set; }
 
     public List<LeaveType> LeaveTypes { get; set; } = new();
+    public List<Holiday> AvailableFloatingHolidays { get; set; } = new();
 }
 
 public class LeaveBalanceViewModel

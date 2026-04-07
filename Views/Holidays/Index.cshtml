@@ -1,0 +1,130 @@
+@model IEnumerable<LMS.Models.Holiday>
+
+@{
+    ViewData["Title"] = "Holiday Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-calendar-event me-2"></i>Holiday Management</h2>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-primary border-2 shadow-sm rounded-pill px-4">
+                <i class="bi bi-calendar3 me-1"></i> Calendar View
+            </a>
+            <a asp-action="Import" class="btn btn-outline-success border-2 shadow-sm rounded-pill px-4">
+                <i class="bi bi-file-earmark-excel me-1"></i> Import List
+            </a>
+            <a asp-action="Create" class="btn btn-primary shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-circle me-1"></i> Add New Holiday
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3">
+             <div class="row align-items-center">
+                 <div class="col">
+                     <h5 class="mb-0 text-muted small text-uppercase fw-bold ls-1">Annual Holiday Calendar</h5>
+                 </div>
+                 <div class="col-auto">
+                     <span class="badge bg-soft-primary text-primary rounded-pill">Total: @Model.Count()</span>
+                 </div>
+             </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Holiday Name</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Assignments</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-semibold text-dark">@item.Name</div>
+                            </td>
+                            <td>
+                                <div class="badge bg-soft-info text-info">
+                                    <i class="bi bi-calendar3 me-1"></i> @item.Date.ToString("dd MMM yyyy")
+                                </div>
+                                @if (item.IsRecurringYearly)
+                                {
+                                    <span class="ms-1 small text-muted"><i class="bi bi-arrow-repeat" title="Recurring Yearly"></i></span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsFloating)
+                                {
+                                    <span class="badge bg-soft-warning text-warning border-0">Floating</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-soft-primary text-primary border-0">Public</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.DepartmentId != null)
+                                {
+                                    <span class="badge bg-outline-secondary rounded-pill border py-1 px-3">
+                                        <i class="bi bi-building me-1"></i> @item.Department?.Name
+                                    </span>
+                                }
+                                else if (item.EmployeeId != null)
+                                {
+                                    <span class="badge bg-outline-info rounded-pill border py-1 px-3">
+                                        <i class="bi bi-person me-1"></i> @item.Employee?.FirstName @item.Employee?.LastName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-soft-success text-success rounded-pill border-0 py-1 px-3">
+                                        <i class="bi bi-globe me-1"></i> All Employees
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="dropdown">
+                                    <button class="btn btn-icon btn-sm" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                        <li><a class="dropdown-item py-2" asp-action="Edit" asp-route-id="@item.Id"><i class="bi bi-pencil me-2 text-warning"></i> Edit</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item py-2 text-danger" asp-action="Delete" asp-route-id="@item.Id"><i class="bi bi-trash me-2"></i> Delete</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x display-4 mb-3 d-block"></i>
+                                <p>No holidays found. Start by adding one!</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1); }
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+    
+    .ls-1 { letter-spacing: 0.1em; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid transparent; background: transparent; }
+    .btn-icon:hover { background-color: #f8f9fa; border-color: #dee2e6; }
+</style>

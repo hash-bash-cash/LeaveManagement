@@ -1,0 +1,88 @@
+@model LMS.Models.Holiday
+
+@{
+    ViewData["Title"] = "Edit Holiday";
+    Layout = "_AdminLayout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-warning py-4 text-center rounded-top-4">
+                    <h3 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2"></i>Edit Holiday</h3>
+                </div>
+                <div class="card-body p-5">
+                    <form asp-action="Edit">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Name" class="form-control" placeholder="Holiday Title" required />
+                            <label asp-for="Name">Holiday Name</label>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Date" type="date" class="form-control" placeholder="Date" required />
+                            <label asp-for="Date">Date</label>
+                            <span asp-validation-for="Date" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="form-check form-switch p-3 bg-light rounded-3 shadow-sm d-flex justify-content-between align-items-center border">
+                                    <div class="me-2">
+                                        <label class="form-check-label fw-bold small text-muted text-uppercase" for="IsRecurringYearly">Recurring Yearly</label>
+                                        <p class="mb-0 text-muted tiny">Every year on this date</p>
+                                    </div>
+                                    <input class="form-check-input" type="checkbox" asp-for="IsRecurringYearly">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="form-check form-switch p-3 bg-light rounded-3 shadow-sm d-flex justify-content-between align-items-center border">
+                                    <div class="me-2">
+                                        <label class="form-check-label fw-bold small text-muted text-uppercase" for="IsFloating">Floating Holiday</label>
+                                        <p class="mb-0 text-muted tiny">Chooseable by employee</p>
+                                    </div>
+                                    <input class="form-check-input" type="checkbox" asp-for="IsFloating">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Target Audience (Optional)</label>
+                            <div class="p-3 bg-light rounded-3 border">
+                                <p class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i> If you leave both fields empty, the holiday will apply to all employees.</p>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="DepartmentId" class="form-label small text-muted">Department</label>
+                                    <select asp-for="DepartmentId" class="form-select select-pill" asp-items="ViewBag.DepartmentId">
+                                        <option value="">-- All Departments --</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-0">
+                                    <label asp-for="EmployeeId" class="form-label small text-muted">Specific Employee</label>
+                                    <select asp-for="EmployeeId" class="form-select select-pill" asp-items="ViewBag.EmployeeId">
+                                        <option value="">-- All Employees --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-5 pt-4 border-top">
+                            <a asp-action="Manage" class="btn btn-outline-secondary rounded-pill px-4 me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tiny { font-size: 0.75rem; }
+    .select-pill { border-radius: 50rem; }
+</style>

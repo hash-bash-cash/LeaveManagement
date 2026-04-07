@@ -24,11 +24,17 @@ public class LeaveAllocationService(ApplicationDbContext context) : ILeaveAlloca
 
             if (!hasAllocation)
             {
+                double days = type.DefaultDays;
+                if (type.Code == "PL")
+                {
+                    days = 1; // Starting with 1 PL as per new policy
+                }
+
                 _context.LeaveAllocations.Add(new LeaveAllocation
                 {
                     EmployeeId = userId,
                     LeaveTypeId = type.Id,
-                    NumberOfDays = type.DefaultDays,
+                    NumberOfDays = days,
                     Period = year,
                     DateCreated = DateTime.UtcNow,
                     DateModified = DateTime.UtcNow
@@ -56,11 +62,17 @@ public class LeaveAllocationService(ApplicationDbContext context) : ILeaveAlloca
 
                 if (!hasAllocation)
                 {
+                    double days = type.DefaultDays;
+                    if (type.Code == "PL")
+                    {
+                        days = 1; // Starting with 1 PL as per new policy
+                    }
+
                     _context.LeaveAllocations.Add(new LeaveAllocation
                     {
                         EmployeeId = user.Id,
                         LeaveTypeId = type.Id,
-                        NumberOfDays = type.DefaultDays,
+                        NumberOfDays = days,
                         Period = year,
                         DateCreated = DateTime.UtcNow,
                         DateModified = DateTime.UtcNow
